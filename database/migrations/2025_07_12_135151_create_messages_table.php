@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
-            $table->uuid("sender_id")->constrained("users")->onDelete("set null");
-            $table->uuid("receiver_id")->constrained("users")->onDelete("set null");
+            $table->ulid("sender_id")->constrained("users")->onDelete("set null");
+            $table->ulid("receiver_id")->constrained("users")->onDelete("set null");
             $table->text("message")->nullable();
             $table->string("file_name")->nullable();
             $table->string("file_original_name")->nullable();

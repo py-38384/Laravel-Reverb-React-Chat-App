@@ -240,7 +240,7 @@
     .chat-container {
         display: flex;
         flex-direction: column;
-        padding-top: 30px;
+        padding: 30px 10px;
         max-height: 76vh;
         overflow-y: scroll;
         scrollbar-width: none;
@@ -299,6 +299,9 @@
     .chat-container .chat-right {
         justify-content: end;
         flex-direction: row-reverse;
+    }
+    .chat-container .chat-right .message-container{
+        align-items: end;
     }
 
     .chat .message {

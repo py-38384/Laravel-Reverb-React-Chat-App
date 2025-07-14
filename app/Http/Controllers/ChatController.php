@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Inertia\Inertia;
+use App\Services\ChatServices;
+use App\Http\Requests\ChatRequest;
+
+class ChatController extends Controller
+{
+    private $chatServices;
+    public function __construct(ChatServices $chatServices){
+        $this->chatServices = $chatServices;
+    }
+    public function show(User $user){
+        $messages = $this->chatServices->getAllMessage($user);
+        return Inertia::render('chat',['user' => $user, 'messages' => $messages]);
+    }
+    public function store(ChatRequest $request){
+        $this->chatServices->create([
+            "sender_id" => auth()->id(),
+            "receiver_id" => $request->receiver_id,
+            "message" => $request->message,
+        ]);
+        return redirect()->back();
+    }
+}

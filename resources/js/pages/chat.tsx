@@ -2,9 +2,10 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, ImageIcon, SendHorizonal } from "lucide-react"
-import { User } from '@/types/model';
+import { User, Message } from '@/types/model';
 import { useForm } from '@inertiajs/react';
-import React from 'react';
+import { useId } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MessageForm } from '@/types/form';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -14,7 +15,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Chat({user}: {user: User}) {
+export default function Chat({user, messages}: {user: User, messages: Message[][]}) {
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
         file: null,
@@ -22,7 +23,6 @@ export default function Chat({user}: {user: User}) {
     })
     const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        console.log(data)
         post(route('chat.store'), {
             onSuccess: () => reset()
         })
@@ -32,6 +32,10 @@ export default function Chat({user}: {user: User}) {
             setData("file", e.target.files[0])
         }
     }
+    const bottomRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Chat" />
@@ -76,101 +80,28 @@ export default function Chat({user}: {user: User}) {
                         </span>
                     </div>
                 </div>
-                <div className="chat-container p-4">
-                    <div className="chat chat-left">
+                <div className="chat-container p-4" ref={bottomRef}>
+                    {messages.map((messageGroup, index) => (
+                    <div key={index} className={`chat ${messageGroup[0].receiver_id === user.id? "chat-right": "chat-left"}`}>
                         <div className="dp-container">
-                            <img src="/assets/onika.jpg" className="w-[100px]" alt=""></img>
+                            <img src="/assets/onika.jpg" alt="" style={messageGroup[0].receiver_id === user.id ? { width: '30px' } : {}} />
                         </div>
                         <div className="message-container">
-                            <div className="message bg-gray-100 dark:bg-gray-900" >
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                            {messageGroup.map(message => (
+                            <div key={message.id} className="message bg-gray-100 dark:bg-gray-900" >
+                                {message.message}
                             </div>
-                            <div className="message bg-gray-100 dark:bg-gray-900">
-                                Lorem ipsum
-                            </div>
+                            ))}
                         </div>
                     </div>
-                    <div className="chat chat-right">
-                        <div className="message-container">
-                            <div className="message-box">
-                                <span
-                                    className="message message-right bg-gray-900 text-white dark:bg-gray-100 dark:text-black"
-                                >
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                                </span>
-                                <span
-                                    className="recipient-dp"
-                                    style={{display: 'none'}}
-                                >
-                                    <img src="/assets/onika.jpg" alt=""></img>
-                                </span>
-                            </div>
-                            <div className="message-box">
-                                <span
-                                    className="message message-right  bg-gray-900 text-white dark:bg-gray-100 dark:text-black"
-                                >
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                                    Distinctio aliquam natus consequatur tenetur ab et est repellat, nesciunt sint libero, amet nam facere. Quis,
-                                    atque odio. Dolorem vitae fugit harum.
-                                </span>
-                                <span className="recipient-dp" style={{ display: 'none' }}>
-                                    <img src="/assets/onika.jpg" alt=""></img>
-                                </span>
-                            </div>
-                            <div className="message-box">
-                                <span
-                                    className="message message-right  bg-gray-900 text-white dark:bg-gray-100 dark:text-black"
-                                >
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                                </span>
-                                <span className="recipient-dp">
-                                    <img src="/assets/onika.jpg" alt=""></img>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="chat chat-left">
-                        <div className="dp-container">
-                            <img src="/assets/onika.jpg" className="w-[100px]" alt=""></img>
-                        </div>
-                        <div className="message-container">
-                            <div
-                                className="message bg-gray-100 dark:bg-gray-900"
-                            >
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                            </div>
-                            <div
-                                className="message bg-gray-100 dark:bg-gray-900"
-                            >
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat facilis, accusamus ea ab quaerat minima ullam ipsam
-                                dolores? Consequuntur, ratione. Ab vel accusamus suscipit quibusdam sint ut sequi expedita vitae.
-                            </div>
-                            <div
-                                className="message bg-gray-100 dark:bg-gray-900"
-                            >
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat facilis, accusamus ea ab quaerat minima ullam ipsam
-                                dolores? Consequuntur, ratione. Ab vel accusamus suscipit quibusdam sint ut sequi expedita vitae.
-                            </div>
-                            <div
-                                className="message bg-gray-100 dark:bg-gray-900"
-                            >
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat facilis, accusamus ea ab quaerat minima ullam ipsam
-                                dolores? Consequuntur, ratione. Ab vel accusamus suscipit quibusdam sint ut sequi expedita vitae.
-                            </div>
-                            <div
-                                className="message bg-gray-100 dark:bg-gray-900"
-                            >
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat facilis, accusamus ea ab quaerat minima ullam ipsam
-                                dolores? Consequuntur, ratione. Ab vel accusamus suscipit quibusdam sint ut sequi expedita vitae.
-                            </div>
-                        </div>
-                    </div>
+                    ))}
+
                 </div>
-                <form className="chat-sendbox p-4" onSubmit={sendMessage}>
+                <form className="chat-sendbox p-4 absolute bottom-1.5" onSubmit={sendMessage}>
                     <div className="image-file-container hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full">
                         <label
                             htmlFor="image-file"
-                            className="image-file"
+                            className="image-file cursor-pointer"
                         >
                             <ImageIcon className='w-[30px] h-[30px] text-[#171717] dark:text-gray-100'/>
                         </label>
@@ -183,17 +114,17 @@ export default function Chat({user}: {user: User}) {
                         ></input>
                     </div>
                     <div className="message-box-container">
-                        <textarea
+                        <input
                             name="message"
                             placeholder="Write your message..."
                             id=""
                             className="message-input-box bg-gray-100 focus:bg-transparent border-1 focus:border-gray-100 border-transparent scrollbar-hide dark:bg-gray-900" 
                             onChange={(e) => setData('message', e.target.value)}
                             value={data.message}
-                        ></textarea>
+                        ></input>
                     </div>
                     <div className="send-button-container hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full">
-                        <button type='submit'>
+                        <button type='submit' className='cursor-pointer'>
                             <SendHorizonal className='w-[30px] h-[30px] text-[#171717] dark:text-gray-100'/>
                         </button>
                     </div>

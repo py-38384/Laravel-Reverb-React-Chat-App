@@ -24,10 +24,4 @@ class UserController extends Controller
         $users = $this->userService->getAllOtherUser();
         return Inertia::render("dashboard",["users" => $users]);
     }
-    public function userChat(User $user){
-        return Inertia::render('chat',['user' => $user]);
-    }
-    public function userChat_store(Request $request){
-        dd($request->all());
-    }
 }
