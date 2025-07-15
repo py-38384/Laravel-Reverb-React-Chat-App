@@ -8,4 +8,6 @@ interface ChatServiceInterface
 {
     public function create($data): Message;
     public function getAllMessage();
+    public function getUnreadMessage();
+    
 }

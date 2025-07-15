@@ -31,4 +31,10 @@ class ChatRepository implements ChatRepositoryInterface
         }
         return Message::all();
     }
+    public function getAllUnread($user_id, $sender_id){
+        return Message::where('receiver_id', $user_id)
+                        ->where('sender_id', $sender_id)
+                        ->where('is_read', false)
+                        ->get();
+    }
 }

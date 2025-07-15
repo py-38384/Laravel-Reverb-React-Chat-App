@@ -4,9 +4,10 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, ImageIcon, SendHorizonal } from "lucide-react"
 import { User, Message } from '@/types/model';
 import { useForm } from '@inertiajs/react';
-import { useId } from 'react';
-import React, { useEffect, useRef } from 'react';
+import { useEchoPublic } from '@laravel/echo-react';
+import React, { useState } from 'react';
 import { MessageForm } from '@/types/form';
+import ChatContainer from '@/components/chat-container';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,12 +16,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Chat({user, messages}: {user: User, messages: Message[][]}) {
+export default function Chat({user, messages, unReadMessages}: {user: User, messages: Message[][], unReadMessages: Message[]}) {
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
         file: null,
         receiver_id: user.id
     })
+    const [currentUnreadMessage, setCurrentUnreadMessage] = useState(unReadMessages);
     const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         post(route('chat.store'), {
@@ -32,10 +34,14 @@ export default function Chat({user, messages}: {user: User, messages: Message[][
             setData("file", e.target.files[0])
         }
     }
-    const bottomRef = useRef<HTMLDivElement | null>(null);
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+
+    useEchoPublic(
+        `test-channel`,
+        "SendMessage",
+        (e) => {
+            console.log(e);
+        },
+    );
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Chat" />
@@ -80,23 +86,7 @@ export default function Chat({user, messages}: {user: User, messages: Message[][
                         </span>
                     </div>
                 </div>
-                <div className="chat-container p-4" ref={bottomRef}>
-                    {messages.map((messageGroup, index) => (
-                    <div key={index} className={`chat ${messageGroup[0].receiver_id === user.id? "chat-right": "chat-left"}`}>
-                        <div className="dp-container">
-                            <img src="/assets/onika.jpg" alt="" style={messageGroup[0].receiver_id === user.id ? { width: '30px' } : {}} />
-                        </div>
-                        <div className="message-container">
-                            {messageGroup.map(message => (
-                            <div key={message.id} className="message bg-gray-100 dark:bg-gray-900" >
-                                {message.message}
-                            </div>
-                            ))}
-                        </div>
-                    </div>
-                    ))}
-
-                </div>
+                <ChatContainer user={user} messages={messages} currentUnreadMessage={currentUnreadMessage}/>
                 <form className="chat-sendbox p-4 absolute bottom-1.5" onSubmit={sendMessage}>
                     <div className="image-file-container hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full">
                         <label

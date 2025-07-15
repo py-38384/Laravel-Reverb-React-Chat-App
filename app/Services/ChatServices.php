@@ -34,4 +34,7 @@ class ChatServices
         }
         return $groupedMessages;
     }
+    public function getUnreadMessage($user){
+        return $this->chatRepository->getAllUnread(auth()->id(), $user->id);
+    }
 }
