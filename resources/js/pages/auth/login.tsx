@@ -21,24 +21,43 @@ interface LoginProps {
     canResetPassword: boolean;
 }
 
-export default function Login({ status, canResetPassword }: LoginProps) {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
-        email: '',
-        password: '',
-        remember: false,
-    });
-
-    const setTokenToTheLocalStorage = () => {
-        
+export const setTokenToTheLocalStorage = ($token: string) => {
+    localStorage.setItem("bearerToken",$token);
+    return true
+}
+export const getTokenFromTheLocalStorage = () => {
+    return localStorage.getItem("bearerToken")
+}
+export const clearTokenFromTheLocalStorage = () => {
+    localStorage.removeItem("bearerToken")
+    return true
+}
+const getTokenFromBackend = async (email: string, password: string) => {
+    try{
+        const res = await fetch("/api/get-token",{
+            method: "POST",
+            headers: {
+                'accept': "application/json",
+                'Content-Type': "application/json",
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+            })
+        })
+        if(res.status === 200){
+            const resData = await res.json()
+            if(resData.status === "success"){
+                return resData.token;
+            }
+        }
+    } catch(error){
+        console.log(error)
     }
-    const getTokenFromTheLocalStorage = () => {
-
-    }
-    const getTokenFromBackend = () => {
-
-    }
-    const checkTokenValidation = async (token: string) => {
-        const result = await fetch("/api/token/check",{
+}
+const checkTokenValidation = async (token: string) => {
+    try {
+        const res = await fetch("/api/token/check",{
                 method: "POST",
                 headers: {
                     'accept': "application/json",
@@ -49,38 +68,28 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 })
             })
 
-    }
-    const getCheckAndStoreBearerToken = () => {
-        const bearerToken = localStorage.getItem('bearerToken')
-        if(bearerToken){
-
+        if(res.status === 200){
+            const resData = await res.json()
+            if(resData.status === "success"){
+                return true;
+            }
         }
-        fetch("/api/get-token",{
-            method: "POST",
-            headers: {
-                'accept': "application/json",
-                'Content-Type': "application/json",
-            },
-            body: JSON.stringify({
-                email: data.email,
-                password: data.password,
-            })
-        })
-        fetch("/api/get-token",{
-            method: "POST",
-            headers: {
-                'accept': "application/json",
-                'Content-Type': "application/json",
-            },
-            body: JSON.stringify({
-                email: data.email,
-                password: data.password,
-            })
-        })
-        .then(res => res.json())
-        .then(resData => {
-            console.log(resData)
-        })
+        return false;
+    } catch (error) {
+        console.log(error)
+        return false;
+    }
+
+}
+export default function Login({ status, canResetPassword }: LoginProps) {
+    const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
+        email: '',
+        password: '',
+        remember: false,
+    });
+
+    const getCheckAndStoreBearerToken = () => {
+        console.log("Testing")
     }
 
     const submit: FormEventHandler = (e) => {
