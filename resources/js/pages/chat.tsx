@@ -5,7 +5,7 @@ import { ArrowLeft, ImageIcon, SendHorizonal } from "lucide-react"
 import { User, Message } from '@/types/model';
 import { useForm } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageForm } from '@/types/form';
 import ChatContainer from '@/components/chat-container';
 

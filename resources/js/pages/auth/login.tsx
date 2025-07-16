@@ -28,8 +28,27 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         remember: false,
     });
 
+    const getAndStoreBearerToken = () => {
+        fetch("/api/get-token",{
+            method: "POST",
+            headers: {
+                'accept': "application/json",
+                'Content-Type': "application/json",
+            },
+            body: JSON.stringify({
+                email: data.email,
+                password: data.password,
+            })
+        })
+        .then(res => res.json())
+        .then(resData => {
+            console.log(resData)
+        })
+    }
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        getAndStoreBearerToken();
         post(route('login'), {
             onFinish: () => reset('password'),
         });
