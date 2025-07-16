@@ -8,8 +8,9 @@ const ChatContainer = ({user, messages, currentUnreadMessage}: {user: User, mess
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     },[user, messages])
-    const makeAsRead = (payload: number[]) => {
-        
+    const makeAsRead = async(payload: number[]) => {
+        const bearerToken = localStorage.getItem("bearerToken")
+        console.log(bearerToken)
     }
     useEffect(() => {
         if (!currentUnreadMessage.length) return;
@@ -18,7 +19,7 @@ const ChatContainer = ({user, messages, currentUnreadMessage}: {user: User, mess
             payload.push(message.id)
         })
         makeAsRead(payload)
-    })
+    },[])
   return (
     <div className="chat-container p-4">
         {messages.map((messageGroup, index) => (

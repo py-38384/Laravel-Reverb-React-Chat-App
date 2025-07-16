@@ -10,10 +10,10 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-        Route::get('dashboard', [UserController::class, 'index'])->name('dashboard');
-        Route::get('chat/{user}', [ChatController::class, 'show'])->name('chat');
-        Route::post('chat/store', [ChatController::class, 'store'])->name('chat.store');
-        Route::post('/messages/mark-read', [ChatController::class, 'mark_read'])->name('chat.mark_read');
+    Route::get('dashboard', [UserController::class, 'index'])->name('dashboard');
+    Route::get('chat/{user}', [ChatController::class, 'show'])->name('chat');
+    Route::post('chat/store', [ChatController::class, 'store'])->name('chat.store');
+    Route::post('/messages/mark-read', [ChatController::class, 'mark_read'])->name('chat.mark_read');
 });
 
 require __DIR__.'/settings.php';

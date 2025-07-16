@@ -5,7 +5,7 @@ export interface User{
     id: string,
     name: string,
     updated_at: string,
-    receive_message_count: number
+    unreadMessage: number
 }
 export interface Message{
     created_at: string,

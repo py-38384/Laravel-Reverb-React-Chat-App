@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { table } from 'console';
 
 type LoginForm = {
     email: string;
@@ -32,9 +33,9 @@ export const clearTokenFromTheLocalStorage = () => {
     localStorage.removeItem("bearerToken")
     return true
 }
-const getTokenFromBackend = async (email: string, password: string) => {
+const getTokenFromBackendAndSetToLocalStorage = async (email: string, password: string) => {
     try{
-        const res = await fetch("/api/get-token",{
+        const res = await fetch("/api/token/get",{
             method: "POST",
             headers: {
                 'accept': "application/json",
@@ -48,9 +49,13 @@ const getTokenFromBackend = async (email: string, password: string) => {
         if(res.status === 200){
             const resData = await res.json()
             if(resData.status === "success"){
-                return resData.token;
+                const newToken = resData.token
+                setTokenToTheLocalStorage(newToken);
+                return newToken;
             }
         }
+        console.log(res.status)
+        console.log(res.statusText)
     } catch(error){
         console.log(error)
     }
@@ -88,8 +93,27 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         remember: false,
     });
 
-    const getCheckAndStoreBearerToken = () => {
-        console.log("Testing")
+    const getCheckAndStoreBearerToken = async () => {
+        // fetch("/api/token/test",{
+        //     method: "POST",
+        //     headers: {
+        //         'accept': "application/json",
+        //         'Content-Type': "application/json",
+        //     },
+        //     body: JSON.stringify({
+        //         token: "test",
+        //     })
+        // }).then(res => res.json()).then(data => console.log(data))
+        const token = getTokenFromTheLocalStorage()
+        if(token){
+            const isValid = await checkTokenValidation(token);
+            if(!isValid){
+                getTokenFromBackendAndSetToLocalStorage(data.email, data.password);
+            }
+        } else {
+            clearTokenFromTheLocalStorage()
+            getTokenFromBackendAndSetToLocalStorage(data.email, data.password);
+        }
     }
 
     const submit: FormEventHandler = (e) => {

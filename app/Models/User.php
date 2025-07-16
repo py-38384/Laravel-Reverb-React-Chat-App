@@ -14,6 +14,7 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasUlidPrimaryKey, HasApiTokens;
 
+    protected $table = "users";
     public $incrementing = false;
     public $keyType = "string";
     /**
@@ -49,7 +50,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function receiveMessage(){
-        return $this->hasMany(Message::class,'receiver_id','id');
+    public function getUnreadMessage(){
+        return Message::where("receiver_id", auth()->id())->where("sender_id", $this->id)->where("is_read", false)->get();
+    }
+    public function getUnreadMessageCount(){
+        return Message::where("receiver_id", auth()->id())->where("sender_id", $this->id)->where("is_read", false)->count();
     }
 }
