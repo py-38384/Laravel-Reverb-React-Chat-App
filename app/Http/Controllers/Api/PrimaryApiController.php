@@ -7,7 +7,13 @@ use Illuminate\Http\Request;
 
 class PrimaryApiController extends Controller
 {
-    public function getToken(Request $request){
+    public function check(){
+        return response()->json([
+            "status" => "success",
+            "message" => "authenticated"
+        ])->setStatusCode(200);
+    }
+    public function get(Request $request){
         logger($request->all());
         return response()->json([
             "status" => "success",

@@ -28,7 +28,44 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         remember: false,
     });
 
-    const getAndStoreBearerToken = () => {
+    const setTokenToTheLocalStorage = () => {
+        
+    }
+    const getTokenFromTheLocalStorage = () => {
+
+    }
+    const getTokenFromBackend = () => {
+
+    }
+    const checkTokenValidation = async (token: string) => {
+        const result = await fetch("/api/token/check",{
+                method: "POST",
+                headers: {
+                    'accept': "application/json",
+                    'Content-Type': "application/json",
+                },
+                body: JSON.stringify({
+                    token: token,
+                })
+            })
+
+    }
+    const getCheckAndStoreBearerToken = () => {
+        const bearerToken = localStorage.getItem('bearerToken')
+        if(bearerToken){
+
+        }
+        fetch("/api/get-token",{
+            method: "POST",
+            headers: {
+                'accept': "application/json",
+                'Content-Type': "application/json",
+            },
+            body: JSON.stringify({
+                email: data.email,
+                password: data.password,
+            })
+        })
         fetch("/api/get-token",{
             method: "POST",
             headers: {
@@ -48,7 +85,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        getAndStoreBearerToken();
+        getCheckAndStoreBearerToken();
         post(route('login'), {
             onFinish: () => reset('password'),
         });
