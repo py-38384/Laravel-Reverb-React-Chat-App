@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -33,10 +34,23 @@ class PrimaryApiController extends Controller
         ])->setStatusCode(200);
     }
     public function updateMessageReadStatus(Request $request){
-        logger($request->all());
+        $user = User::find($request->user_id);
+        if($user){
+            $result = Message::whereIn('id',$request->unread_message_ids)->where('receiver_id', auth()->id())->where('sender_id',$user->id)->update(["is_read" => true]);
+            if($result){
+                return response()->json([
+                    "status" => "success",
+                    "Message" => "Message read status update successful"
+                ])->setStatusCode(200);
+            }
+            return response()->json([
+                "status" => "error",
+                "Message" => "Couldn't update the messages status. Something went wrong!"
+            ])->setStatusCode(500);
+        }
         return response()->json([
-            "status" => "success",
-            "Message" => "got the ids"
-        ])->setStatusCode(200);
+            "status" => "error",
+            "Message" => "Couldn't find the user"
+        ])->setStatusCode(404);
     }
 }

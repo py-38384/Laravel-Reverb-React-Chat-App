@@ -86,7 +86,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                         </span>
                     </div>
                 </div>
-                <ChatContainer user={user} messages={messages} currentUnreadMessage={currentUnreadMessage}/>
+                <ChatContainer user={user} messages={messages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
                 <form className="chat-sendbox p-4 absolute bottom-1.5" onSubmit={sendMessage}>
                     <div className="image-file-container hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full">
                         <label

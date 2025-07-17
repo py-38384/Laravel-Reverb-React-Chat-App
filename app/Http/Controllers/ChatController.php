@@ -29,8 +29,4 @@ class ChatController extends Controller
         broadcast(new SendMessage())->toOthers();
         return redirect()->back();
     }
-    public function mark_read(Request $request){
-        logger($request->messages);
-        return back(); 
-    }
 }

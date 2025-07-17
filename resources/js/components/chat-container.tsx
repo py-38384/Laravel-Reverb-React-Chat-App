@@ -3,14 +3,31 @@ import { useEffect, useRef } from 'react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 
-const ChatContainer = ({user, messages, currentUnreadMessage}: {user: User, messages: Message[][], currentUnreadMessage: Message[]}) => {
+const ChatContainer = ({user, messages, currentUnreadMessage, setCurrentUnreadMessage}: {user: User, messages: Message[][], currentUnreadMessage: Message[], setCurrentUnreadMessage: React.Dispatch<React.SetStateAction<Message[]>>}) => {
     const bottomRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     },[user, messages])
     const makeAsRead = async(payload: number[]) => {
         const bearerToken = localStorage.getItem("bearerToken")
-        console.log(bearerToken)
+        const res = await fetch("/api/update-message-read-status",{
+            method: "POST",
+            headers: {
+                'accept': "application/json",
+                'Content-Type': "application/json",
+                'Authorization': `Bearer ${bearerToken}`,
+            },
+            body: JSON.stringify({
+                user_id: user.id,
+                unread_message_ids: payload,
+            })
+        })
+        if(res.status === 200){
+            const resData = await res.json()
+            if(resData.status === "success"){
+                setCurrentUnreadMessage([]);
+            }
+        }
     }
     useEffect(() => {
         if (!currentUnreadMessage.length) return;
@@ -18,6 +35,7 @@ const ChatContainer = ({user, messages, currentUnreadMessage}: {user: User, mess
         currentUnreadMessage.map(message => {
             payload.push(message.id)
         })
+        console.log(payload)
         makeAsRead(payload)
     },[])
   return (

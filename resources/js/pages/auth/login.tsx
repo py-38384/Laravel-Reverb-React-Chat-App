@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
-import { table } from 'console';
+import { getTokenFromTheLocalStorage, checkTokenValidation, getTokenFromBackendAndSetToLocalStorage, clearTokenFromTheLocalStorage } from '@/helper';
 
 type LoginForm = {
     email: string;
@@ -21,71 +21,6 @@ interface LoginProps {
     status?: string;
     canResetPassword: boolean;
 }
-
-export const setTokenToTheLocalStorage = ($token: string) => {
-    localStorage.setItem("bearerToken",$token);
-    return true
-}
-export const getTokenFromTheLocalStorage = () => {
-    return localStorage.getItem("bearerToken")
-}
-export const clearTokenFromTheLocalStorage = () => {
-    localStorage.removeItem("bearerToken")
-    return true
-}
-const getTokenFromBackendAndSetToLocalStorage = async (email: string, password: string) => {
-    try{
-        const res = await fetch("/api/token/get",{
-            method: "POST",
-            headers: {
-                'accept': "application/json",
-                'Content-Type': "application/json",
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password,
-            })
-        })
-        if(res.status === 200){
-            const resData = await res.json()
-            if(resData.status === "success"){
-                const newToken = resData.token
-                setTokenToTheLocalStorage(newToken);
-                return newToken;
-            }
-        }
-        console.log(res.status)
-        console.log(res.statusText)
-    } catch(error){
-        console.log(error)
-    }
-}
-const checkTokenValidation = async (token: string) => {
-    try {
-        const res = await fetch("/api/token/check",{
-                method: "POST",
-                headers: {
-                    'accept': "application/json",
-                    'Content-Type': "application/json",
-                },
-                body: JSON.stringify({
-                    token: token,
-                })
-            })
-
-        if(res.status === 200){
-            const resData = await res.json()
-            if(resData.status === "success"){
-                return true;
-            }
-        }
-        return false;
-    } catch (error) {
-        console.log(error)
-        return false;
-    }
-
-}
 export default function Login({ status, canResetPassword }: LoginProps) {
     const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
         email: '',
@@ -94,16 +29,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     });
 
     const getCheckAndStoreBearerToken = async () => {
-        // fetch("/api/token/test",{
-        //     method: "POST",
-        //     headers: {
-        //         'accept': "application/json",
-        //         'Content-Type': "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         token: "test",
-        //     })
-        // }).then(res => res.json()).then(data => console.log(data))
         const token = getTokenFromTheLocalStorage()
         if(token){
             const isValid = await checkTokenValidation(token);
