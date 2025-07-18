@@ -17,16 +17,16 @@ class ChatController extends Controller
     }
     public function show(User $user){
         $messages = $this->chatServices->getAllMessage($user);
-        $unReadMessages = $this->chatServices->getUnreadMessage($user);
+        $unReadMessages = $this->chatServices->getUnreadMessage($user); 
         return Inertia::render('chat',['user' => $user, 'messages' => $messages, 'unReadMessages' => $unReadMessages]);
     }
     public function store(ChatRequest $request){
-        $this->chatServices->create([
+        $newMessage = $this->chatServices->create([
             "sender_id" => auth()->id(),
             "receiver_id" => $request->receiver_id,
             "message" => $request->message,
         ]);
-        broadcast(new SendMessage())->toOthers();
+        broadcast(new SendMessage($newMessage))->toOthers();
         return redirect()->back();
     }
 }

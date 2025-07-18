@@ -14,12 +14,10 @@ class SendMessage implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    /**
-     * Create a new event instance.
-     */
-    public function __construct()
+    public $message;
+    public function __construct($newMessage)
     {
-        //
+        $this->message = $newMessage->load('sender:id,name', 'receiver:id,name');
     }
 
     /**
@@ -30,11 +28,7 @@ class SendMessage implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('test-channel'),
+            new PrivateChannel('message-channel.'.$this->message->receiver->id),
         ];
-    }
-
-    public function broadcastWith(){
-        return ["message" => "Hallo World"];
     }
 }

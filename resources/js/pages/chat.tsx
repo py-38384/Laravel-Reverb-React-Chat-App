@@ -1,13 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, ImageIcon, SendHorizonal } from "lucide-react"
-import { User, Message } from '@/types/model';
+import { User, Message, MessageEvent } from '@/types/model';
 import { useForm } from '@inertiajs/react';
-import { useEchoPublic } from '@laravel/echo-react';
-import React, { useEffect, useState } from 'react';
+import { useEchoPublic, useEcho } from '@laravel/echo-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MessageForm } from '@/types/form';
 import ChatContainer from '@/components/chat-container';
+import useCurrentUser from '@/hooks/use-current-user';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -22,6 +23,11 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
         file: null,
         receiver_id: user.id
     })
+    const currentUser = useCurrentUser()
+    const [currentMessages, setCurrentMessages] = useState(messages)
+    useEffect(() => {
+        setCurrentMessages(messages)
+    },[messages])
     const [currentUnreadMessage, setCurrentUnreadMessage] = useState(unReadMessages);
     const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -34,13 +40,38 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
             setData("file", e.target.files[0])
         }
     }
+    const handleMessageReceive = (e: MessageEvent) => {
+        const messageObj: Message = typeof e.message === "string" ? JSON.parse(e.message) : e.message;
 
-    useEchoPublic(
-        `test-channel`,
+        setCurrentMessages((prevCurrentMessages: Message[][]) => {
+            if (prevCurrentMessages.length > 0 &&
+                (
+                    (prevCurrentMessages[prevCurrentMessages.length - 1][0].sender_id === currentUser.id && messageObj.sender_id === currentUser.id) ||
+                    (prevCurrentMessages[prevCurrentMessages.length - 1][0].sender_id === user.id && messageObj.sender_id === user.id)
+                )
+            ) {
+                const lastGroup = prevCurrentMessages[prevCurrentMessages.length - 1];
+                // Check for duplicate by message id (or use another unique property)
+                if (!lastGroup.some(msg => msg.id === messageObj.id)) {
+                    return [
+                        ...prevCurrentMessages.slice(0, -1),
+                        [...lastGroup, messageObj as Message]
+                    ];
+                }
+                return prevCurrentMessages;
+            } else {
+                return [
+                    ...prevCurrentMessages,
+                    [messageObj as Message]
+                ];
+            }
+        });
+        setCurrentUnreadMessage(prev => [...prev, messageObj])
+    }
+    useEcho(
+        `message-channel.${currentUser.id}`,
         "SendMessage",
-        (e) => {
-            console.log(e);
-        },
+        handleMessageReceive,
     );
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -86,7 +117,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                         </span>
                     </div>
                 </div>
-                <ChatContainer user={user} messages={messages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
+                <ChatContainer user={user} messages={currentMessages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
                 <form className="chat-sendbox p-4 absolute bottom-1.5" onSubmit={sendMessage}>
                     <div className="image-file-container hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full">
                         <label

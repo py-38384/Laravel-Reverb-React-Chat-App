@@ -30,8 +30,6 @@ export const getTokenFromBackendAndSetToLocalStorage = async (email: string, pas
                 return newToken;
             }
         }
-        console.log(res.status)
-        console.log(res.statusText)
     } catch(error){
         console.log(error)
     }

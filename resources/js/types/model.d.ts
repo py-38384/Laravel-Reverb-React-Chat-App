@@ -19,3 +19,9 @@ export interface Message{
     sender_id: string
     updated_at: string
 }
+export interface MessageEvent{
+    id: number;
+    sender_id: number;
+    receiver_id: number;
+    message: string;
+}

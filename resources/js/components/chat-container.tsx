@@ -35,21 +35,29 @@ const ChatContainer = ({user, messages, currentUnreadMessage, setCurrentUnreadMe
         currentUnreadMessage.map(message => {
             payload.push(message.id)
         })
-        console.log(payload)
         makeAsRead(payload)
-    },[])
+    },[currentUnreadMessage])
   return (
     <div className="chat-container p-4">
-        {messages.map((messageGroup, index) => (
-        <div key={index} className={`chat ${messageGroup[0].receiver_id === user.id? "chat-right": "chat-left"}`}>
-            <div className="dp-container">
+        {messages.map((messageGroup, groupIndex) => (
+        <div key={groupIndex} className={`chat ${messageGroup[0].receiver_id === user.id? "chat-right": "chat-left"}`}>
+            <div className="dp-container" style={{ 
+                display: messageGroup[0].receiver_id === user.id? "none": "block"
+             }}>
                 <img src="/assets/onika.jpg" alt="" style={messageGroup[0].receiver_id === user.id ? { width: '30px' } : {}} />
             </div>
             <div className="message-container">
-                {messageGroup.map(message => (
-                <div key={message.id} className="message bg-gray-100 dark:bg-gray-900" >
-                    {message.message}
-                </div>
+                {messageGroup.map((message, index) => message.receiver_id === user.id?(
+                    <div key={message.id} className="message-box">
+                        <span className="message message-right message bg-gray-100 dark:bg-gray-900">
+                            {message.message}
+                        </span>
+                        <span className="recipient-dp"><img src="/assets/onika.jpg" style={{ opacity: 0 }} alt=""/></span>
+                    </div>
+                ):(
+                    <div key={message.id} className="message bg-gray-100 dark:bg-gray-900" >
+                        {message.message}
+                    </div>
                 ))}
             </div>
         </div>
