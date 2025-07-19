@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,8 +35,22 @@ class ProfileController extends Controller
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
+        $user = $request->user();
+        $image = request()->profile_picture;
+        $image_with_path = $user->image;
 
-        $request->user()->save();
+        if($image){
+            if($user->image){
+                $old_file_with_full_path = public_path($user->image);
+                if(File::exists($old_file_with_full_path)){
+                    unlink($old_file_with_full_path);
+                }
+            }
+            $image_with_path = $image->store('asset/profile/image','public');
+        }
+
+        $user->image = $image_with_path;
+        $user->save();
 
         return to_route('profile.edit');
     }

@@ -1,7 +1,7 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useState } from 'react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useInitials } from '@/hooks/use-initials';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -26,19 +28,32 @@ type ProfileForm = {
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
+    const [imageURL, setImageURL] = useState<string | null>('/'+auth.user.image)
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
+    const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
         name: auth.user.name,
         email: auth.user.email,
+        profile_picture: null as File | null,
+        _method: 'PATCH',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-
-        patch(route('profile.update'), {
-            preserveScroll: true,
-        });
+        post(route('profile.update'));
     };
+    const getInitials = useInitials();
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if(e.target.files && e.target.files.length > 0){
+            const file = e.target.files?.[0]    
+            if(file){
+                const url = URL.createObjectURL(file)
+                console.log(file)
+                console.log(url)
+                setImageURL(url)
+            }
+            setData("profile_picture", e.target.files[0])
+        }
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -49,6 +64,29 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
 
                     <form onSubmit={submit} className="space-y-6">
+                        <div className="grid gap-2">
+                            <Label htmlFor="profile_pic">Profile Picture</Label>
+                            <Label htmlFor="profile_pic" className='border w-fit p-2'>
+                                {/* <img src="/assets/piyal.jpg" className='w-[200px] h-[200px] rounded-full object-cover border-3 border-dashed border-gray-500'/> */}
+                                <Avatar className="w-[200px] h-[200px] rounded-full object-cover border-3 border-dashed border-gray-500">
+                                    <AvatarImage src={imageURL ?? undefined} alt={data.name} />
+                                    <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white text-8xl">
+                                        {getInitials(data.name)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </Label>
+
+                            <Input
+                                id="profile_pic"
+                                className="mt-1 w-full hidden"
+                                type='file'
+                                accept="image/*" 
+                                onChange={handleImageChange}
+                                autoComplete="profile_pic"
+                            />
+
+                            <InputError className="mt-2" message={errors.name} />
+                        </div>
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>
 

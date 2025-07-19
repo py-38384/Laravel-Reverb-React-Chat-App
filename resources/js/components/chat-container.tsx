@@ -48,16 +48,24 @@ const ChatContainer = ({user, messages, currentUnreadMessage, setCurrentUnreadMe
             </div>
             <div className="message-container">
                 {messageGroup.map((message, index) => message.receiver_id === user.id?(
+                    <>
                     <div key={message.id} className="message-box">
                         <span className="message message-right message bg-gray-100 dark:bg-gray-900">
                             {message.message}
                         </span>
                         <span className="recipient-dp"><img src="/assets/onika.jpg" style={{ opacity: 0 }} alt=""/></span>
                     </div>
+                    <div className={`text-[10px] bottom-0 left-0 mr-8 text-gray-500 ${(index === (messageGroup.length-1)) && ((messages.length-1) === groupIndex) ? 'block':'hidden'}`}>{message.created_at_human}</div>
+                    <div className='absolute w-full text-center text-[10px] bottom-0 left-0'>{message.created_at_human_24h}</div>
+                    </>
                 ):(
+                    <>
                     <div key={message.id} className="message bg-gray-100 dark:bg-gray-900" >
                         {message.message}
                     </div>
+                    <div className={`text-[10px] bottom-0 left-0 text-gray-500 ${(index === (messageGroup.length-1)) && ((messages.length-1) === groupIndex) ? 'block':'hidden'}`}>{message.created_at_human}</div>
+                    <div className='absolute w-full text-center text-[10px] bottom-0 left-0'>{message.created_at_human_24h}</div>
+                    </>
                 ))}
             </div>
         </div>

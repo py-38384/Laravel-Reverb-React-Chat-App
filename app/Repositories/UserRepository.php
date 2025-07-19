@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Message;
 use App\Models\User;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 
@@ -21,11 +22,29 @@ class UserRepository implements UserRepositoryInterface
      * @return \Illuminate\Database\Eloquent\Collection<int, User>
      */
     public function get_all_user_without_the_current(){
-        return User::where('id','!=',auth()->id())->get()->map(function ($user){
+        $users = User::where('id','!=',auth()->id())->get()->map(function ($user){
             $user->unreadMessage =  $user->getUnreadMessageCount();
+            $user->lastMessage = Message::where(function($query) use($user){
+                $query->where('receiver_id', $user->id)
+                ->where('sender_id', auth()->id());
+            })->orWhere(function($query) use($user) {
+                $query->where('receiver_id', auth()->id())
+                ->where('sender_id', $user->id);
+            })->orderBy("created_at","desc")->first();
+            if($user->lastMessage){
+                $user->lastMessage->created_at_human = $user->lastMessage->created_at->diffForHumans();
+            }
             return $user;
         });
+        return $users;
     }
+    /**
+     * Summary of find
+     * Function: find
+     * Description: A Repository function for getting specific user by there id
+     * @return \App\Models\User
+     */
+
     public function find(string $userId){
         return User::find($userId);
     }

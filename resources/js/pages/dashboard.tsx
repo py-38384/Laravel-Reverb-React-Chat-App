@@ -22,6 +22,8 @@ export default function Dashboard({users}: {users: User[]}) {
                     <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white">
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">SL</th>
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Name</th>   
+                        <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Last Message</th>   
+                        <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Last Message Time</th>   
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Email</th>
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Action</th>
                     </tr>
@@ -31,6 +33,8 @@ export default function Dashboard({users}: {users: User[]}) {
                         <tr key={user.id}>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{index+1}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.name}</td>
+                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage?.message}</td>
+                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage && user.lastMessage?.created_at_human}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.email}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2 relative">
                                 <Link href={route('chat',user.id)}>
