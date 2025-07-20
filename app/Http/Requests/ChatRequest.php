@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
 class ChatRequest extends FormRequest
 {
@@ -19,10 +20,15 @@ class ChatRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
+    public function rules(Request $request): array
     {
+        if(count($request->files) === 0){
+            return [
+                "message" => "required",
+            ];
+        }
         return [
-            "message" => "required",
+            "message" => "nullable|sometimes",
         ];
     }
 }

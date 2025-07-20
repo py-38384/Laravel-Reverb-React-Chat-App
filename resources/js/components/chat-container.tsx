@@ -1,13 +1,13 @@
 import { Message, User } from '@/types/model'
 import { useEffect, useRef } from 'react';
-import { router } from '@inertiajs/react';
-import axios from 'axios';
+import { useInitials } from '@/hooks/use-initials';
 
 const ChatContainer = ({user, messages, currentUnreadMessage, setCurrentUnreadMessage}: {user: User, messages: Message[][], currentUnreadMessage: Message[], setCurrentUnreadMessage: React.Dispatch<React.SetStateAction<Message[]>>}) => {
     const bottomRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     },[user, messages])
+    const getInitials = useInitials()
     const makeAsRead = async(payload: number[]) => {
         const bearerToken = localStorage.getItem("bearerToken")
         const res = await fetch("/api/update-message-read-status",{
@@ -44,29 +44,37 @@ const ChatContainer = ({user, messages, currentUnreadMessage, setCurrentUnreadMe
             <div className="dp-container" style={{ 
                 display: messageGroup[0].receiver_id === user.id? "none": "block"
              }}>
-                <img src="/assets/onika.jpg" alt="" style={messageGroup[0].receiver_id === user.id ? { width: '30px' } : {}} />
+                {user.image? (
+                    <img src={`/${user.image}`} alt="" style={messageGroup[0].receiver_id === user.id ? { width: '30px' } : {}} />
+                ) : (
+                    <div className='bg-gray-200 w-[45px] h-[45px] rounded-full flex items-center justify-center'>{getInitials(user.name)}</div>
+                )}
             </div>
             <div className="message-container">
-                {messageGroup.map((message, index) => message.receiver_id === user.id?(
-                    <>
-                    <div key={message.id} className="message-box">
-                        <span className="message message-right message bg-gray-100 dark:bg-gray-900">
+                {messageGroup.map((message, index) => 
+                <div key={message.id}>
+                    {message.receiver_id === user.id?(
+                        <>
+                        <div key={message.id} className="message-box">
+                            <span className="message message-right message bg-gray-100 dark:bg-gray-900">
+                                {message.message}
+                            </span>
+                            <span className="recipient-dp"><img src="/assets/onika.jpg" style={{ opacity: 0 }} alt=""/></span>
+                        </div>
+                        <div className={`text-[10px] bottom-0 left-0 mr-8 text-gray-500 ${(index === (messageGroup.length-1)) && ((messages.length-1) === groupIndex) ? 'block':'hidden'}`}>{message.created_at_human}</div>
+                        <div className='absolute w-full text-center text-[10px] bottom-0 left-0'>{message.created_at_human_24h}</div>
+                        </>
+                    ):(
+                        <>
+                        <div key={message.id} className="message bg-gray-100 dark:bg-gray-900" >
                             {message.message}
-                        </span>
-                        <span className="recipient-dp"><img src="/assets/onika.jpg" style={{ opacity: 0 }} alt=""/></span>
-                    </div>
-                    <div className={`text-[10px] bottom-0 left-0 mr-8 text-gray-500 ${(index === (messageGroup.length-1)) && ((messages.length-1) === groupIndex) ? 'block':'hidden'}`}>{message.created_at_human}</div>
-                    <div className='absolute w-full text-center text-[10px] bottom-0 left-0'>{message.created_at_human_24h}</div>
-                    </>
-                ):(
-                    <>
-                    <div key={message.id} className="message bg-gray-100 dark:bg-gray-900" >
-                        {message.message}
-                    </div>
-                    <div className={`text-[10px] bottom-0 left-0 text-gray-500 ${(index === (messageGroup.length-1)) && ((messages.length-1) === groupIndex) ? 'block':'hidden'}`}>{message.created_at_human}</div>
-                    <div className='absolute w-full text-center text-[10px] bottom-0 left-0'>{message.created_at_human_24h}</div>
-                    </>
-                ))}
+                        </div>
+                        <div className={`text-[10px] bottom-0 left-0 text-gray-500 ${(index === (messageGroup.length-1)) && ((messages.length-1) === groupIndex) ? 'block':'hidden'}`}>{message.created_at_human}</div>
+                        <div className='absolute w-full text-center text-[10px] bottom-0 left-0'>{message.created_at_human_24h}</div>
+                        </>
+                    )}
+                </div>
+                )}
             </div>
         </div>
         ))}

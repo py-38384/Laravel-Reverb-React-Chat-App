@@ -7,7 +7,6 @@ use App\Models\User;
 use Inertia\Inertia;
 use App\Services\ChatServices;
 use App\Http\Requests\ChatRequest;
-use Request;
 
 class ChatController extends Controller
 {
@@ -24,7 +23,7 @@ class ChatController extends Controller
         $newMessage = $this->chatServices->create([
             "sender_id" => auth()->id(),
             "receiver_id" => $request->receiver_id,
-            "message" => $request->message,
+            "message" => $request->message, 
         ]);
         broadcast(new SendMessage($newMessage))->toOthers();
         return redirect()->back();

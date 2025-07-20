@@ -4,11 +4,13 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, ImageIcon, SendHorizonal } from "lucide-react"
 import { User, Message, MessageEvent } from '@/types/model';
 import { useForm } from '@inertiajs/react';
-import { useEchoPublic, useEcho } from '@laravel/echo-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEcho } from '@laravel/echo-react';
+import React, { useEffect, useState } from 'react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MessageForm } from '@/types/form';
 import ChatContainer from '@/components/chat-container';
 import useCurrentUser from '@/hooks/use-current-user';
+import { useInitials } from '@/hooks/use-initials';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,10 +22,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Chat({user, messages, unReadMessages}: {user: User, messages: Message[][], unReadMessages: Message[]}) {
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
-        file: null,
+        files: null,
         receiver_id: user.id
     })
     const currentUser = useCurrentUser()
+    const getInitials = useInitials()
     const [currentMessages, setCurrentMessages] = useState(messages)
     useEffect(() => {
         setCurrentMessages(messages)
@@ -37,7 +40,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
     }
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if(e.target.files && e.target.files.length > 0){
-            setData("file", e.target.files[0])
+            setData("files", e.target.files)
         }
     }
     const handleMessageReceive = (e: MessageEvent) => {
@@ -93,7 +96,11 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                         </div>
                         <div className="recipient-dp-header-and-idicator">
                             <div className="recipient-header-dp">
-                                <img src="/assets/onika.jpg" alt=""></img>
+                                {user.image? (
+                                    <img src={`/${user.image}`} alt=""></img>
+                                ) : (
+                                    <div className='bg-gray-200 w-[45px] h-[45px] rounded-full flex items-center justify-center'>{getInitials(user.name)}</div>
+                                )}
                             </div>
                             <div className="name-and-idicator">
                                 <h4 className="recipient-name text-2xl font-extrabold">{user.name}</h4>
@@ -132,6 +139,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                             type="file"
                             onChange={handleFileUpload}
                             readOnly={processing}
+                            multiple
                         ></input>
                     </div>
                     <div className="message-box-container">

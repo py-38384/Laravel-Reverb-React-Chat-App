@@ -5,8 +5,9 @@ export interface User{
     id: string,
     name: string,
     updated_at: string,
-    unreadMessage: number
-    lastMessage: Message
+    unreadMessage: number,
+    lastMessage: Message,
+    image: string,
 }
 export interface Message{
     created_at: string,

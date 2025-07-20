@@ -16,9 +16,7 @@ return new class extends Migration
             $table->ulid("sender_id")->constrained("users")->onDelete("set null");
             $table->ulid("receiver_id")->constrained("users")->onDelete("set null");
             $table->text("message")->nullable();
-            $table->string("file_name")->nullable();
-            $table->string("file_original_name")->nullable();
-            $table->string("folder_path")->nullable();
+            $table->text("files")->nullable();
             $table->boolean("is_read")->default(false);
             $table->timestamps();
         });

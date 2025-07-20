@@ -47,8 +47,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
             const file = e.target.files?.[0]    
             if(file){
                 const url = URL.createObjectURL(file)
-                console.log(file)
-                console.log(url)
                 setImageURL(url)
             }
             setData("profile_picture", e.target.files[0])
