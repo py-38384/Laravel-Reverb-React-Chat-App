@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ImageController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -15,6 +16,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('chat/store', [ChatController::class, 'store'])->name('chat.store');
     Route::post('/messages/mark-read', [ChatController::class, 'mark_read'])->name('chat.mark_read');
 });
+
+Route::get('message/image/{$image_id}',ImageController::class);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

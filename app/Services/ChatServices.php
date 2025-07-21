@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Image;
 use Illuminate\Http\Request;
 use App\Repositories\ChatRepository;
 
@@ -13,7 +14,7 @@ class ChatServices
         $this->chatRepository = $chatRepository;
     }
     public function create($data){
-        $files = request()->allFiles()['files'];
+        $files = isset(request()->allFiles()['files'])? request()->allFiles()['files']: null;
         $files_json = null;
         if(is_iterable($files) && count($files) > 0){
             $files_json = [];
@@ -21,7 +22,14 @@ class ChatServices
                 $mimetype = $file->getMimeType();
                 $originalName = $file->getClientOriginalName();
                 $file_full_path = $file->store('message/image','storage');
-                $files_json[] = ['minetype' => $mimetype, 'originalName' => $originalName, 'file_full_path' => $file_full_path];
+
+                $image = Image::create([
+                    'user_id' => auth()->id(),
+                    'original_name' => $originalName,
+                    'mime_type' => $mimetype,
+                    'full_path' => $file_full_path,
+                ]);
+                $files_json[] = $image->id;
             }
             $data['files'] = json_encode($files_json);
         }
