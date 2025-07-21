@@ -13,17 +13,17 @@ class ChatServices
         $this->chatRepository = $chatRepository;
     }
     public function create($data){
-        $files = request()->files;
+        $files = request()->allFiles()['files'];
         $files_json = null;
         if(is_iterable($files) && count($files) > 0){
             $files_json = [];
             foreach($files as $file){
                 $mimetype = $file->getMimeType();
                 $originalName = $file->getClientOriginalName();
-                $file_full_path = $file->store('asset/profile/image','storage');
+                $file_full_path = $file->store('message/image','storage');
                 $files_json[] = ['minetype' => $mimetype, 'originalName' => $originalName, 'file_full_path' => $file_full_path];
             }
-            
+            $data['files'] = json_encode($files_json);
         }
         return $this->chatRepository->create($data);
     }
