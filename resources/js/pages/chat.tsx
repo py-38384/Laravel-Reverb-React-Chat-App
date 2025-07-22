@@ -139,6 +139,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                             type="file"
                             onChange={handleFileUpload}
                             readOnly={processing}
+                            accept="image/*"
                             multiple
                         ></input>
                     </div>

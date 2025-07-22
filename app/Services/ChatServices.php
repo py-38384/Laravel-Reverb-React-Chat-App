@@ -58,4 +58,7 @@ class ChatServices
     public function getUnreadMessage($user){
         return $this->chatRepository->getAllUnread(auth()->id(), $user->id);
     }
+    public function chat_exist($auth_user_id, $other_user_id){
+        return $this->chatRepository->message_exist($auth_user_id, $other_user_id);
+    }
 }

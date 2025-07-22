@@ -58,6 +58,16 @@ class ChatRepository implements ChatRepositoryInterface
 
         return $messages;
     }
+    public function message_exist($auth_user_id, $other_user_id){
+        $exist = Message::where(function($query) use($auth_user_id, $other_user_id){
+                $query->where('receiver_id', $auth_user_id)
+                    ->where('sender_id', $other_user_id);
+            })->orWhere(function($query) use($auth_user_id, $other_user_id) {
+                $query->where('receiver_id', $auth_user_id)
+                    ->where('sender_id', $other_user_id);
+            })->exists();
+        return $exist;
+    }
     public function getAllUnread($user_id, $sender_id){
         return Message::where('receiver_id', $user_id)
                         ->where('sender_id', $sender_id)

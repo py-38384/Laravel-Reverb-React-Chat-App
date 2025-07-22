@@ -13,9 +13,7 @@ export interface Message{
     created_at: string,
     created_at_human: string,
     created_at_human_24h: string,
-    file_name: null | string,
-    file_original_name: null | string,
-    folder_path: null | string,
+    files: null | string,
     id: number
     is_read: boolean,
     message: null | string,

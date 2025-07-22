@@ -16,8 +16,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('chat/store', [ChatController::class, 'store'])->name('chat.store');
     Route::post('/messages/mark-read', [ChatController::class, 'mark_read'])->name('chat.mark_read');
 });
+Route::get('message/image/{image_id}',ImageController::class);
 
-Route::get('message/image/{$image_id}',ImageController::class);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
