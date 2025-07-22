@@ -40,6 +40,7 @@ class ImageController extends Controller
             }
             abort(404);
         } catch (\Throwable $th) {
+            logger($th->getMessage());
             abort(404);
         }
     }

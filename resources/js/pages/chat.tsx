@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, ImageIcon, SendHorizonal } from "lucide-react"
+import { ArrowLeft, ImageIcon, SendHorizonal, X } from "lucide-react"
 import { User, Message, MessageEvent } from '@/types/model';
 import { useForm } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
@@ -125,6 +125,12 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                     </div>
                 </div>
                 <ChatContainer user={user} messages={currentMessages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
+                <div className='bg-gray-100 mb-20 flex p-2'>
+                    <div className='p-2 bg-white'>
+                        <button><X/></button>
+                        <img src="/apple-touch-icon.png" />
+                    </div>
+                </div>
                 <form className="chat-sendbox p-4 absolute bottom-1.5" onSubmit={sendMessage}>
                     <div className="image-file-container hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full">
                         <label
