@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Chat({user, messages, unReadMessages}: {user: User, messages: Message[][], unReadMessages: Message[]}) {
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
-        files: null,
+        files: [],
         receiver_id: user.id
     })
     const currentUser = useCurrentUser()
@@ -40,9 +40,15 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
     }
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if(e.target.files && e.target.files.length > 0){
-            setData("files", e.target.files)
+            setData("files", Array.from(e.target.files))
         }
     }
+    const handleFileRemove = (index: number) => {
+        if (!data.files) return;
+        const updatedFiles = data.files.filter((_, i) => i !== index);
+        setData('files', updatedFiles);
+    }
+
     const handleMessageReceive = (e: MessageEvent) => {
         const messageObj: Message = typeof e.message === "string" ? JSON.parse(e.message) : e.message;
 
@@ -125,12 +131,16 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                     </div>
                 </div>
                 <ChatContainer user={user} messages={currentMessages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
-                <div className='bg-gray-100 mb-20 flex p-2'>
-                    <div className='p-2 bg-white'>
-                        <button><X/></button>
-                        <img src="/apple-touch-icon.png" />
+                {data.files && data.files.length > 0 ? (
+                <div className='bg-gray-100 dark:bg-black mb-20 flex p-2 absolute bottom-0 gap-2'>
+                    {data.files.map((file, index) => (
+                    <div key={index} className='p-2 bg-white dark:bg-gray-900 relative'>
+                        <button className='p-1 absolute text-red-600 rounded-full bg-gray-100 flex items-center justify-center right-1 top-1 cursor-pointer hover:bg-red-600 hover:text-gray-100'><X onClick={(e) => handleFileRemove(index)} className='w-[25px] h-[25px]'/></button>
+                        <img className='h-[250px]' src={URL.createObjectURL(file)} />
                     </div>
+                    ))}
                 </div>
+                ): null}
                 <form className="chat-sendbox p-4 absolute bottom-1.5" onSubmit={sendMessage}>
                     <div className="image-file-container hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full">
                         <label

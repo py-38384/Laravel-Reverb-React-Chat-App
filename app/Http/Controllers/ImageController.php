@@ -32,7 +32,7 @@ class ImageController extends Controller
                 if($preview){
                     $manager = new ImageManager(new \Intervention\Image\Drivers\Gd\Driver); // or Imagick
                     $image_compressed = $manager->read(storage_path($image->full_path))
-                                    ->scaleDown(width: 300)
+                                    ->scaleDown(width: 400)
                                     ->toJpeg(50);
                     return response($image_compressed, 200)->header('Content-Type', 'image/jpeg');
                 }

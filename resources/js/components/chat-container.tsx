@@ -80,12 +80,12 @@ const ChatContainer = ({
                     </div>
                     <div className="message-container">
                         {messageGroup.map((message, index) => (
-                            <div key={message.id}>
+                            <div key={message.id} className='message-group'>
                                 {message.receiver_id === user.id ? (
                                     <>
                                         <div key={message.id} className="message-box">
                                             <span
-                                                className={`message message-right message flex flex-col items-end bg-gray-100 dark:bg-gray-900 ${message.files ? 'gap-1.5' : ''}`}
+                                                className={`message message-right message flex flex-col items-end bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900 ${message.files ? 'gap-1.5' : ''}`}
                                             >
                                                 {message.files
                                                     ? JSON.parse(message.files).map((file: string) => (
@@ -109,12 +109,12 @@ const ChatContainer = ({
                                     <>
                                         <div
                                             key={message.id}
-                                            className={`message flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900`}
+                                            className={`message message-left flex flex-col justify-center bg-gray-100 dark:bg-gray-900`}
                                         >
                                             {message.files
                                                 ? JSON.parse(message.files).map((file: string) => (
-                                                      <span key={file} className="message message-right message bg-gray-100 dark:bg-gray-900">
-                                                          <div className="flex flex-col items-center justify-center gap-1.5">
+                                                      <span key={file} className="">
+                                                          <div className="flex flex-col gap-1.5">
                                                               <img src={`/message/image/${file}?preview=true`} />
                                                           </div>
                                                       </span>
