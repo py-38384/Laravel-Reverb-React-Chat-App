@@ -3,6 +3,9 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { User } from '@/types/model';
 import { useInitials } from '@/hooks/use-initials';
+import useCurrentUser from '@/hooks/use-current-user';
+import { useEcho } from '@laravel/echo-react';
+import { Message, MessageEvent } from '@/types/model';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -13,6 +16,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Dashboard({users}: {users: User[]}) {
     const getInitials = useInitials()
+    const currentUser = useCurrentUser()
+    // const handleMessageReceive = (e:any) => {
+    //     const messageObj: Message = typeof e.message === "string" ? JSON.parse(e.message) : e.message;
+    //     const userObj: User = typeof e.user === "string" ? JSON.parse(e.user) : e.user;
+    // }
+    // useEcho(
+    //     `message-notification-channel.${currentUser.id}`,
+    //     "SendNotification",
+    //     handleMessageReceive,
+    // );
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
@@ -40,8 +53,8 @@ export default function Dashboard({users}: {users: User[]}) {
                                 )}
                                 </td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.name}</td>
-                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage?.message}</td>
-                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage && user.lastMessage?.created_at_human}</td>
+                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage?.message? user.lastMessage?.message: "N/A"}</td>
+                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage ? user.lastMessage?.created_at_human: "N/A"}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.email}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2 relative">
                                 <Link href={route('chat',user.id)}>

@@ -6,7 +6,6 @@ import { User, Message, MessageEvent } from '@/types/model';
 import { useForm } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import React, { useEffect, useState } from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MessageForm } from '@/types/form';
 import ChatContainer from '@/components/chat-container';
 import useCurrentUser from '@/hooks/use-current-user';
@@ -132,11 +131,11 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                 </div>
                 <ChatContainer user={user} messages={currentMessages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
                 {data.files && data.files.length > 0 ? (
-                <div className='bg-gray-100 dark:bg-black mb-20 flex p-2 absolute bottom-0 gap-2'>
+                <div className='bg-gray-100 dark:bg-black mb-18 flex p-2 absolute bottom-0 gap-2 overflow-x-scroll w-fit no-scrollbar'>
                     {data.files.map((file, index) => (
-                    <div key={index} className='p-2 bg-white dark:bg-gray-900 relative'>
+                    <div key={index} className='p-2 bg-white dark:bg-gray-900 relative min-w-fit'>
                         <button className='p-1 absolute text-red-600 rounded-full bg-gray-100 flex items-center justify-center right-1 top-1 cursor-pointer hover:bg-red-600 hover:text-gray-100'><X onClick={(e) => handleFileRemove(index)} className='w-[25px] h-[25px]'/></button>
-                        <img className='h-[250px]' src={URL.createObjectURL(file)} />
+                        <img className='h-[250px] max-md:h-180px w-fit object-contain' src={URL.createObjectURL(file)} />
                     </div>
                     ))}
                 </div>

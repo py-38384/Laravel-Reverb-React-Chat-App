@@ -1,9 +1,19 @@
 @import 'tailwindcss';
-
 @plugin 'tailwindcss-animate';
-
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@layer utilities {
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+          display: none;
+      }
+     /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+    }
+  }
 
 @custom-variant dark (&:is(.dark *));
 
@@ -284,7 +294,7 @@
         border-bottom-left-radius: 10px;
     }
 
-    .chat-container .chat-right .message-box:first-child .message {
+    .chat-container .chat-right .message-group:first-child .message {
         border-top-right-radius: 10px;
     }
 
@@ -293,7 +303,7 @@
         border-bottom-left-radius: 10px;
     }
 
-    .chat-container .chat-right .message-box:last-child .message {
+    .chat-container .chat-right .message-group:last-child .message {
         border-bottom-right-radius: 10px;
     }
 
