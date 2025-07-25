@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-            $table->ulid("sender_id")->constrained("users")->onDelete("set null");
-            $table->text("message")->nullable();
+            $table->string('type')->default('private');
+            $table->foreignId('last_message_id')->constrained('messages')->onDelete("set null")->nullable();
             $table->timestamps();
         });
     }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('conversations');
     }
 };

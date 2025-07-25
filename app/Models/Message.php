@@ -10,7 +10,10 @@ class Message extends Model
     public function sender(){
         return $this->belongsTo(User::class, 'sender_id','id');
     }
-    public function receiver(){
-        return $this->belongsTo(User::class, 'receiver_id','id');
+    public function images(){
+        return $this->hasMany(Image::class);
+    }
+    public function message_seen(){
+        return $this->belongsToMany(User::class, 'message_seen','user_id','message_id');
     }
 }

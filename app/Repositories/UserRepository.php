@@ -19,24 +19,11 @@ class UserRepository implements UserRepositoryInterface
      * Summary of get_all_user_without_the_current
      * Function: get_all_user_without_the_current
      * Description: A Repository function for getting all user except currently authenticated user
-     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     * @return \Illuminate\Pagination\LengthAwarePaginator<int, User>
      */
-    public function get_all_user_without_the_current(){
-        $users = User::where('id','!=',auth()->id())->get()->map(function ($user){
-            $user->unreadMessage =  $user->getUnreadMessageCount();
-            $user->lastMessage = Message::where(function($query) use($user){
-                $query->where('receiver_id', $user->id)
-                ->where('sender_id', auth()->id());
-            })->orWhere(function($query) use($user) {
-                $query->where('receiver_id', auth()->id())
-                ->where('sender_id', $user->id);
-            })->orderBy("created_at","desc")->first();
-            if($user->lastMessage){
-                $user->lastMessage->created_at_human = $user->lastMessage->created_at->diffForHumans();
-            }
-            return $user;
-        });
-        return $users;
+    public function getAllUsersExceptMe(){
+        $authId = auth()->id();
+        return User::whereKeyNot($authId)->paginate(10);
     }
     /**
      * Summary of find

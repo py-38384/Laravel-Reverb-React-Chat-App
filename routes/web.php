@@ -11,10 +11,12 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', [UserController::class, 'index'])->name('dashboard');
+    Route::get('messages', [UserController::class, 'messages'])->name('messages');
     Route::get('chat/{user}', [ChatController::class, 'show'])->name('chat');
     Route::post('chat/store', [ChatController::class, 'store'])->name('chat.store');
     Route::post('/messages/mark-read', [ChatController::class, 'mark_read'])->name('chat.mark_read');
+
+    Route::get('global', [UserController::class, 'index'])->name('global');
 });
 Route::get('message/image/{image_id}',ImageController::class);
 

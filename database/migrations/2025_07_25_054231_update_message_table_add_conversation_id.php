@@ -11,18 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function(Blueprint $table){
-            $table->string('image')->nullable()->after('name');
+        Schema::table('messages', function (Blueprint $table) {
+            $table->foreignId("conversation_id")->constrained("conversations")->onDelete("cascade");
         });
     }
-    
+
     /**
      * Reverse the migrations.
-    */
+     */
     public function down(): void
     {
-        Schema::table('users', function(Blueprint $table){
-            $table->removeColumn('image');
+        Schema::table('messages', function (Blueprint $table) {
+            $table->dropColumn('conversation_id');
         });
     }
 };

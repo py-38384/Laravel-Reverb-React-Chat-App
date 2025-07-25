@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Conversation;
 use App\Traits\HasUlidPrimaryKey;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -50,10 +51,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function getUnreadMessage(){
-        return Message::where("receiver_id", auth()->id())->where("sender_id", $this->id)->where("is_read", false)->get();
+    public function conversations(){
+        return self::belongsToMany(Conversation::class, "conversation_user",'conversation_id','user_id');
     }
-    public function getUnreadMessageCount(){
-        return Message::where("receiver_id", auth()->id())->where("sender_id", $this->id)->where("is_read", false)->count();
+    public function receivedFriendships(){
+        return self::belongsToMany(User::class, 'friendships','requester_id','addressee_id');
+    }
+    public function sentFriendships(){
+        return self::belongsToMany(User::class, 'friendships','addressee_id','requester_id');
+    }
+    public function allFriends()
+    {
+        $sent = $this->sentFriendships()->where('status', 'accepted')->pluck('addressee_id');
+        $received = $this->receivedFriendships()->where('status', 'accepted')->pluck('requester_id');
+        return User::whereIn('id', $sent->merge($received))->get();
     }
 }

@@ -91,7 +91,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                     <div className="chat-header-left">
                         <div className="back-button-container">
                             <Link
-                                href={route('dashboard')}
+                                href={route('messages')}
                                 className="back-button hover:bg-gray-100 rounded-full dark:hover:bg-[#171717]"
                             >
                                 <ArrowLeft

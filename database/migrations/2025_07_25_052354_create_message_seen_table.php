@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('message_seen', function (Blueprint $table) {
             $table->id();
-            $table->ulid("sender_id")->constrained("users")->onDelete("set null");
-            $table->text("message")->nullable();
+            $table->foreignId('message_id')->constrained('messages')->onDelete('cascade');
+            $table->ulid('user_id')->constrained('users')->onDelete('cascade');
+            $table->timestamp('seen_at')->default(now());
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('message_seen');
     }
 };

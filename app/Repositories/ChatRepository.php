@@ -23,13 +23,7 @@ class ChatRepository implements ChatRepositoryInterface
         if($user_id && !$sender_id){
             $messages = Message::where('receiver_id', $user_id)->orderBy('created_at')->get();
         } else if($user_id && $sender_id){
-            $messages = Message::where(function($query) use($user_id, $sender_id){
-                $query->where('receiver_id', $user_id)
-                    ->where('sender_id', $sender_id);
-            })->orWhere(function($query) use($user_id, $sender_id) {
-                $query->where('receiver_id', $sender_id)
-                    ->where('sender_id', $user_id);
-            })->orderBy('created_at')->get();
+            //work start from here after namaz
         } else {
             $messages = Message::orderBy('created_at')->get();
         }

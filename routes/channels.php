@@ -8,6 +8,3 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('message-channel.{receiver_id}', function($user, $receiver_id){
     return $user->id == $receiver_id;
 });
-Broadcast::channel('message-notification-channel.{receiver_id}', function($user, $receiver_id){
-    return $user->id == $receiver_id;
-});

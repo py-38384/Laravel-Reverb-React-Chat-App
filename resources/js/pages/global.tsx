@@ -5,27 +5,19 @@ import { User } from '@/types/model';
 import { useInitials } from '@/hooks/use-initials';
 import useCurrentUser from '@/hooks/use-current-user';
 import { useEcho } from '@laravel/echo-react';
-import { Message, MessageEvent } from '@/types/model';
+import { Message } from '@/types/model';
+import { UserPaginate } from '@/types/paginate';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'List of users',
-        href: '/dashboard',
+        href: '/messages',
     },
 ];
 
-export default function Dashboard({users}: {users: User[]}) {
+export default function Messages({users}: {users: UserPaginate}) {
     const getInitials = useInitials()
     const currentUser = useCurrentUser()
-    // const handleMessageReceive = (e:any) => {
-    //     const messageObj: Message = typeof e.message === "string" ? JSON.parse(e.message) : e.message;
-    //     const userObj: User = typeof e.user === "string" ? JSON.parse(e.user) : e.user;
-    // }
-    // useEcho(
-    //     `message-notification-channel.${currentUser.id}`,
-    //     "SendNotification",
-    //     handleMessageReceive,
-    // );
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
@@ -35,15 +27,13 @@ export default function Dashboard({users}: {users: User[]}) {
                 <thead>
                     <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white">
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Photo</th>
-                        <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Name</th>   
-                        <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Last Message</th>   
-                        <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Last Message Time</th>   
+                        <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Name</th>
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Email</th>
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                        {users.map((user: User, index: number) => (
+                        {users.data.map((user: User, index: number) => (
                         <tr key={user.id}>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">
                                 {user.image? (
@@ -53,8 +43,6 @@ export default function Dashboard({users}: {users: User[]}) {
                                 )}
                                 </td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.name}</td>
-                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage?.message? user.lastMessage?.message: "N/A"}</td>
-                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage ? user.lastMessage?.created_at_human: "N/A"}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.email}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2 relative">
                                 <Link href={route('chat',user.id)}>
@@ -69,6 +57,11 @@ export default function Dashboard({users}: {users: User[]}) {
                         ))}
                 </tbody>
             </table>
+            <div className='flex gap-1 p-1'>
+                {users.links.map((link, index) => (
+                    <a key={index} href={link.url ?? undefined} dangerouslySetInnerHTML={{ __html: link.label }} className={`p-2 h-[30px] border flex items-center justify-center hover:bg-gray-900 hover:text-white cursor-pointer ${link.active || ((users.current_page == 1) && index == 0) || ((users.current_page == (users.links.length - 2)) && index == (users.links.length - 1))? 'bg-gray-200 pointer-events-none': ''}`}></a>
+                ))}
+            </div>
         </div>
     </div>
         </AppLayout>

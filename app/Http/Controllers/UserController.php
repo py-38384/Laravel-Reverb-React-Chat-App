@@ -20,8 +20,13 @@ class UserController extends Controller
      * function: index
      * Description: Get all the other user and display it to the dashboard. 
      */
+    public function messages() {
+        $users = $this->userService->getAllOtherUser();
+        return Inertia::render("messages",["users" => $users]);
+    }
     public function index() {
         $users = $this->userService->getAllOtherUser();
-        return Inertia::render("dashboard",["users" => $users]);
+        // dd($users);
+        return Inertia::render("global",["users" => $users]);
     }
 }

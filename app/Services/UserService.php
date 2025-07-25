@@ -19,7 +19,7 @@ class UserService implements UserServiceInterface
      * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>
      */
     public function getAllOtherUser(){
-        return $this->userRepository->get_all_user_without_the_current();
+        return $this->userRepository->getAllUsersExceptMe();
     }
     public function getSingleUser(string $user_id){
         return $this->userRepository->find($user_id);

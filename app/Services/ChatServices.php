@@ -14,24 +14,21 @@ class ChatServices
         $this->chatRepository = $chatRepository;
     }
     public function create($data){
+        $message = $this->chatRepository->create($data);
         $files = isset(request()->allFiles()['files'])? request()->allFiles()['files']: null;
-        $files_json = null;
         if(is_iterable($files) && count($files) > 0){
-            $files_json = [];
             foreach($files as $file){
                 $mimetype = $file->getMimeType();
                 $originalName = $file->getClientOriginalName();
                 $file_full_path = $file->store('message/image','storage');
 
-                $image = Image::create([
+                $message->images()::create([
                     'user_id' => auth()->id(),
                     'original_name' => $originalName,
                     'mime_type' => $mimetype,
                     'full_path' => $file_full_path,
                 ]);
-                $files_json[] = $image->id;
             }
-            $data['files'] = json_encode($files_json);
         }
         return $this->chatRepository->create($data);
     }
