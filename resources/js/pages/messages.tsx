@@ -5,7 +5,8 @@ import { User } from '@/types/model';
 import { useInitials } from '@/hooks/use-initials';
 import useCurrentUser from '@/hooks/use-current-user';
 import { useEcho } from '@laravel/echo-react';
-import { Message, MessageEvent } from '@/types/model';
+import { Message } from '@/types/model';
+import { UserPaginate } from '@/types/paginate';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -14,18 +15,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Messages({users}: {users: User[]}) {
+export default function Messages({users}: {users: UserPaginate}) {
     const getInitials = useInitials()
     const currentUser = useCurrentUser()
-    // const handleMessageReceive = (e:any) => {
-    //     const messageObj: Message = typeof e.message === "string" ? JSON.parse(e.message) : e.message;
-    //     const userObj: User = typeof e.user === "string" ? JSON.parse(e.user) : e.user;
-    // }
-    // useEcho(
-    //     `message-notification-channel.${currentUser.id}`,
-    //     "SendNotification",
-    //     handleMessageReceive,
-    // );
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
@@ -43,7 +35,7 @@ export default function Messages({users}: {users: User[]}) {
                     </tr>
                 </thead>
                 <tbody>
-                        {users.map((user: User, index: number) => (
+                        {users.data.map((user: User, index: number) => (
                         <tr key={user.id}>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">
                                 {user.image? (

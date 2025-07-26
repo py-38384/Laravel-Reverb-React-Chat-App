@@ -5,7 +5,7 @@ export interface NavLink{
     label: string,
     url: string | null,
 }
-export interface UserPaginate{
+export interface Paginate{
     current_page: number,
     data: User[],
     first_page_url: string,
