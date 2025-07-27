@@ -53,4 +53,14 @@ class PrimaryApiController extends Controller
             "Message" => "Couldn't find the user"
         ])->setStatusCode(404);
     }
+    public function user_search(Request $request){
+        $request->validate([
+            "q" => "required",
+        ]);
+        $searchQuery = $request->q;
+        $users = User::where('name','like',"%$searchQuery%")
+                ->orWhere('email', 'like', "%$searchQuery%")
+                ->get()->toArray();
+        return $users;
+    }
 }
