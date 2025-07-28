@@ -8,6 +8,9 @@ export interface User{
     unreadMessage: number,
     lastMessage: Message,
     image: string,
+    is_pending: boolean,
+    is_accepted: boolean,
+    is_blocked: boolean,
 }
 export interface Message{
     created_at: string,

@@ -29,4 +29,8 @@ class UserController extends Controller
         // dd($users);
         return Inertia::render("global",["users" => $users]);
     }
+    public function requests(){
+        $requests = auth()->user()->receivedFriendships()->get();
+        dd($requests);
+    }
 }

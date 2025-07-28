@@ -17,6 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/messages/mark-read', [ChatController::class, 'mark_read'])->name('chat.mark_read');
 
     Route::get('global', [UserController::class, 'index'])->name('global');
+    Route::get('requests', [UserController::class, 'requests'])->name('requests');
 });
 Route::get('message/image/{image_id}',ImageController::class);
 

@@ -6,10 +6,9 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { User } from '@/types/model';
 import { Paginate as PaginateInterface } from '@/types/paginate';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useQuery } from '@tanstack/react-query';
-import { clear } from 'console';
-import { Ban, UserPlus, Search, X, Users } from 'lucide-react';
+import { Ban, UserPlus, Search, X, Users, Undo2, UserMinus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Spinner from '@/components/spinner';
 import { SpinnerCircular } from 'spinners-react';
@@ -26,11 +25,14 @@ export default function Messages({ users }: { users: PaginateInterface }) {
     const [usersData, setUserData] = useState(users.data)
     const getInitials = useInitials();
     const currentUser = useCurrentUser();
-    const backupUserData = users; 
+    const [backupUserData, setBackupUserData] = useState(users); 
     const [searchInputActive, setSearchInputActive] = useState(false);
     const [showPagination, setShowPagination] = useState(true);
     const [searchInput, setSearchInput] = useState('');
     const debouncedSearchInput = useDebounce(searchInput);
+    const {} = useForm({
+
+    })
     const fetchSearchUserData = async (debouncedSearchInput: string) => {
         const res = await fetch('/api/users/search',{
             method: "POST",
@@ -46,14 +48,13 @@ export default function Messages({ users }: { users: PaginateInterface }) {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
     }
-    const { data, isSuccess, isLoading, isError } = useQuery({
+    const { data, isSuccess, refetch, isLoading, isError } = useQuery({
         queryKey: ["search", debouncedSearchInput],
         queryFn: () => fetchSearchUserData(debouncedSearchInput),
         enabled: !!debouncedSearchInput, // only run query if searchTerm is not empty
     });
     useEffect(() => {
         isSuccess? setUserData(data): null
-        console.log(usersData)
     },[data, isSuccess])
     const clearSearchInput = () => {
         setSearchInput('')
@@ -67,6 +68,23 @@ export default function Messages({ users }: { users: PaginateInterface }) {
             setUserData(backupUserData.data)
         } else {
             setShowPagination(false)
+        }
+    }
+    const handleFriendRequest = async(id: string) =>{
+        const res = await fetch('/api/add/request',{
+            method: "POST",
+            headers: {
+                accept: "application/json",
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${bearerToken}`,
+            },
+            body: JSON.stringify({
+                id: id
+            })
+        })
+        const data = await res.json() 
+        if(data?.status == 'success'){
+            setUserData(preUserData => preUserData.map(user => user.id === id? {...user, is_pending: true}: user ))
         }
     }
     return (
@@ -115,12 +133,33 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                                         <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{user.email}</td>
                                         <td className="relative border border-gray-300 px-4 py-2 dark:border-gray-700">
                                             <div className="flex">
-                                                <Link href={route('chat', user.id)}>
-                                                    <UserPlus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                </Link>
-                                                <Link href={route('chat', user.id)}>
-                                                    <Ban className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                </Link>
+                                                {user.is_pending? (
+                                                    <button title='Remove Request'>
+                                                        <X className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                    </button>
+                                                ): (user.is_blocked? null: user.is_accepted?(
+                                                                <button title='Unfriend' onClick={() => handleFriendRequest(user.id)}>
+                                                                    <UserMinus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                                </button>
+                                                        ): (
+                                                                <button title='Friend Request' onClick={() => handleFriendRequest(user.id)}>
+                                                                    <UserPlus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                                </button>
+                                                        )
+                                                    )
+                                                }
+                                               {user.is_blocked?
+                                                    (
+                                                    <button title='Unblock'>
+                                                        <Undo2 className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                    </button>
+
+                                                    ): (
+                                                    <button title='Block'>
+                                                        <Ban className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                    </button>
+                                                    )
+                                                }
                                             </div>
                                         </td>
                                     </tr>

@@ -1,8 +1,9 @@
-<?php
+<?php 
 
 namespace App\Http\Controllers\Api;
 
 use App\Models\Message;
+use App\Models\Friendship;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -58,9 +59,31 @@ class PrimaryApiController extends Controller
             "q" => "required",
         ]);
         $searchQuery = $request->q;
-        $users = User::where('name','like',"%$searchQuery%")
-                ->orWhere('email', 'like', "%$searchQuery%")
+        $users = User::where('name','ilike',"%$searchQuery%")
+                ->orWhere('email', 'ilike', "%$searchQuery%")
                 ->get()->toArray();
         return $users;
+    }
+    public function add_requests(Request $request){
+        $request->validate([
+            'id' => ['required', 'string', 'exists:users,id']
+        ]);
+        $other_user_id = $request->id;
+        $current_user = auth()->user();
+        $friendship_exist_from_my_end = Friendship::where('requester_id', $current_user->id)->where('addressee_id', $other_user_id)->exists();
+        $friendship_exist_from_there_end = Friendship::where('requester_id', $other_user_id)->where('addressee_id', $current_user->id)->exists();
+
+        if($friendship_exist_from_my_end || $friendship_exist_from_there_end){
+            return [
+                'status' => 'failed',
+                'message' => 'Already friendship exist',
+            ];
+        } 
+        $current_user->sentFriendships()->attach($other_user_id, ['status' => 'pending']);
+        logger($current_user->sentFriendships);
+        return [
+            'status' => 'success',
+            'message' => 'Friend Request Send',
+        ];
     }
 }

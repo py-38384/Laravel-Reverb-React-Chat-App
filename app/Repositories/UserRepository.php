@@ -21,9 +21,39 @@ class UserRepository implements UserRepositoryInterface
      * Description: A Repository function for getting all user except currently authenticated user
      * @return \Illuminate\Pagination\LengthAwarePaginator<int, User>
      */
-    public function getAllUsersExceptMe(){
+    public function getAllUsersExceptMe()
+    {
         $authId = auth()->id();
-        return User::whereKeyNot($authId)->paginate(10);
+        return User::whereKeyNot($authId)
+            ->select('users.*')
+            ->selectRaw('EXISTS (
+        SELECT 1 FROM friendships
+        WHERE status = ?
+          AND (
+              (requester_id = ? AND addressee_id = users.id)
+              OR
+              (requester_id = users.id AND addressee_id = ?)
+          )
+    ) as is_pending', ['pending', $authId, $authId])
+            ->selectRaw('EXISTS (
+        SELECT 1 FROM friendships
+        WHERE status = ?
+          AND (
+              (requester_id = ? AND addressee_id = users.id)
+              OR
+              (requester_id = users.id AND addressee_id = ?)
+          )
+    ) as is_accepted', ['accepted', $authId, $authId])
+            ->selectRaw('EXISTS (
+        SELECT 1 FROM friendships
+        WHERE status = ?
+          AND (
+              (requester_id = ? AND addressee_id = users.id)
+              OR
+              (requester_id = users.id AND addressee_id = ?)
+          )
+    ) as is_blocked', ['blocked', $authId, $authId])
+            ->paginate(10);
     }
     /**
      * Summary of find
@@ -32,7 +62,8 @@ class UserRepository implements UserRepositoryInterface
      * @return \App\Models\User
      */
 
-    public function find(string $userId){
+    public function find(string $userId)
+    {
         return User::find($userId);
     }
 }
