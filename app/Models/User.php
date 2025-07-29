@@ -51,19 +51,34 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function conversations(){
-        return self::belongsToMany(Conversation::class, "conversation_user",'conversation_id','user_id');
-    }
-    public function receivedFriendships(){
-        return self::belongsToMany(User::class, 'friendships','requester_id','addressee_id');
-    }
-    public function sentFriendships(){
-        return self::belongsToMany(User::class, 'friendships','addressee_id','requester_id');
-    }
-    public function allFriends()
+    public function conversations()
     {
-        $sent = $this->sentFriendships()->where('status', 'accepted')->pluck('addressee_id');
-        $received = $this->receivedFriendships()->where('status', 'accepted')->pluck('requester_id');
-        return User::whereIn('id', $sent->merge($received))->get();
+        return self::belongsToMany(Conversation::class, "conversation_user", 'conversation_id', 'user_id');
+    }
+    public function receivedFriendships()
+    {
+        return self::belongsToMany(User::class, 'friendships', 'addressee_id', 'requester_id')->withPivot('status', 'created_at')->withTimestamps();
+    }
+    public function sentFriendships()
+    {
+        return self::belongsToMany(User::class, 'friendships', 'requester_id', 'addressee_id')->withTimestamps();
+    }
+    public function allFriendIds()
+    {
+        $authId = auth()->id();
+        return Friendship::where('status', 'accepted')
+            ->where(function ($q) use ($authId) {
+                $q->where('requester_id', $authId)
+                    ->orWhere('addressee_id', $authId);
+            })
+            ->get()
+            ->map(function ($friendship) use ($authId) {
+                // Return the opposite user (the friend)
+                return $friendship->requester_id == $authId
+                    ? $friendship->addressee_id
+                    : $friendship->requester_id;
+            })
+            ->unique()
+            ->values();
     }
 }

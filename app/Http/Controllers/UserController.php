@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Friendship;
 use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\View\View;
@@ -26,11 +27,15 @@ class UserController extends Controller
     }
     public function index() {
         $users = $this->userService->getAllOtherUser();
-        // dd($users);
         return Inertia::render("global",["users" => $users]);
     }
     public function requests(){
-        $requests = auth()->user()->receivedFriendships()->get();
-        dd($requests);
+        $requests = auth()->user()->receivedFriendships()->where('friendships.status','pending')->select(['users.id','users.name','users.image','users.email','friendships.status','friendships.created_at'])->paginate(10);
+        return Inertia::render("requests",["users" => $requests]);
+    }
+    public function friends(){
+        $friendIds = auth()->user()->allFriendIds();
+        $friends = User::whereIn('id',$friendIds)->select(['id','name','image','email'])->paginate(10);
+        return Inertia::render("friends",["users" => $friends]);
     }
 }

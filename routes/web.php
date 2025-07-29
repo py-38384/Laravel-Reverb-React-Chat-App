@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('global', [UserController::class, 'index'])->name('global');
     Route::get('requests', [UserController::class, 'requests'])->name('requests');
+    Route::get('friends', [UserController::class, 'friends'])->name('friends');
 });
 Route::get('message/image/{image_id}',ImageController::class);
 

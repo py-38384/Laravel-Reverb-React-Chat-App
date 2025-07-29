@@ -8,7 +8,7 @@ import { User } from '@/types/model';
 import { Paginate as PaginateInterface } from '@/types/paginate';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useQuery } from '@tanstack/react-query';
-import { Ban, UserPlus, Search, X, Users, Undo2, UserMinus } from 'lucide-react';
+import { Ban, UserPlus, Search, X, Users, Undo2, UserMinus, Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Spinner from '@/components/spinner';
 import { SpinnerCircular } from 'spinners-react';
@@ -20,7 +20,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Messages({ users }: { users: PaginateInterface }) {
+export default function Request({ users }: { users: PaginateInterface }) {
     const bearerToken = localStorage.getItem('bearerToken');
     const [usersData, setUserData] = useState(users.data)
     const getInitials = useInitials();
@@ -70,8 +70,8 @@ export default function Messages({ users }: { users: PaginateInterface }) {
             setShowPagination(false)
         }
     }
-    const handleFriendRequest = async(id: string) =>{
-        const res = await fetch('/api/add/request',{
+    const handleFriendRequest = async(id: string, oparation: string) =>{
+        const res = await fetch('/api/handle/request',{
             method: "POST",
             headers: {
                 accept: "application/json",
@@ -79,30 +79,13 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                 Authorization: `Bearer ${bearerToken}`,
             },
             body: JSON.stringify({
-                id: id
+                id: id,
+                oparation: oparation,
             })
         })
         const data = await res.json() 
         if(data?.status == 'success'){
-            setUserData(preUserData => preUserData.map(user => user.id === id? {...user, is_pending: true}: user ))
-        }
-    }
-    const handleCancelFriendRequest = async(id: string) =>{
-        const res = await fetch('/api/remove/request',{
-            method: "POST",
-            headers: {
-                accept: "application/json",
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${bearerToken}`,
-            },
-            body: JSON.stringify({
-                id: id
-            })
-        })
-        const data = await res.json() 
-        console.log(data);
-        if(data?.status == 'success'){
-            setUserData(preUserData => preUserData.map(user => user.id === id? {...user, is_pending: false}: user ))
+            setUserData(preUserData => preUserData.filter(user => user.id !== id))
         }
     }
     return (
@@ -132,7 +115,7 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {usersData.map((user: User) => (
+                                {usersData?.map((user: User) => (
                                     <tr key={user.id}>
                                         <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">
                                             {user.image ? (
@@ -151,33 +134,12 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                                         <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{user.email}</td>
                                         <td className="relative border border-gray-300 px-4 py-2 dark:border-gray-700">
                                             <div className="flex">
-                                                {user.is_pending? (
-                                                    <button title='Remove Request' onClick={() => handleCancelFriendRequest(user.id)}>
+                                                    <button title='Accept Request' onClick={() => handleFriendRequest(user.id, 'accept')}>
+                                                        <Check className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                    </button>
+                                                    <button title='Reject Request' onClick={() => handleFriendRequest(user.id, 'reject')}>
                                                         <X className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
                                                     </button>
-                                                ): (user.is_blocked? null: user.is_accepted?(
-                                                                <button title='Unfriend' onClick={() => handleFriendRequest(user.id)}>
-                                                                    <UserMinus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                                </button>
-                                                        ): (
-                                                                <button title='Friend Request' onClick={() => handleFriendRequest(user.id)}>
-                                                                    <UserPlus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                                </button>
-                                                        )
-                                                    )
-                                                }
-                                               {user.is_blocked?
-                                                    (
-                                                    <button title='Unblock'>
-                                                        <Undo2 className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                    </button>
-
-                                                    ): (
-                                                    <button title='Block'>
-                                                        <Ban className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                    </button>
-                                                    )
-                                                }
                                             </div>
                                         </td>
                                     </tr>
