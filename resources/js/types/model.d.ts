@@ -24,3 +24,14 @@ export interface Message{
     sender_id: string
     updated_at: string
 }
+export interface Conversations{
+    id: number,
+    created_at: string,
+    last_message: Message,
+    pivot: {
+        user_id: string,
+        conversation_id: number,
+    },
+    type: string,
+    users: User[],
+}

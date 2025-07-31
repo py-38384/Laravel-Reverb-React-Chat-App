@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chat/{user}', [ChatController::class, 'show'])->name('chat');
     Route::post('chat/store', [ChatController::class, 'store'])->name('chat.store');
     Route::post('/messages/mark-read', [ChatController::class, 'mark_read'])->name('chat.mark_read');
+    Route::post('chat/start/{user}', [ChatController::class, 'chat_start'])->name('chat.start');
 
     Route::get('global', [UserController::class, 'index'])->name('global');
     Route::get('requests', [UserController::class, 'requests'])->name('requests');

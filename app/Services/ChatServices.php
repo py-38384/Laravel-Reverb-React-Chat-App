@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Models\Image;
+use App\Models\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Repositories\ChatRepository;
 
 class ChatServices
@@ -57,5 +60,28 @@ class ChatServices
     }
     public function chat_exist($auth_user_id, $other_user_id){
         return $this->chatRepository->message_exist($auth_user_id, $other_user_id);
+    }
+    public function getOrCreatePrivateConversation($userAId, $userBId){
+        $userIds = [$userAId, $userBId];
+
+        $conversation = Conversation::where('type', 'private')
+            ->whereHas('users', function ($q) use ($userAId, $userBId) {
+                $q->whereIn('user_id', [$userAId, $userBId]);
+            }, '=', 2)
+            ->first();
+        if($conversation){
+            return $conversation;
+        }
+        return DB::transaction(function () use ($userIds, $userAId, $userBId){
+            $friendshipExist = in_array($userBId, User::find($userAId)->allFriendIds()->toArray());
+            if($friendshipExist){
+                $conversation = Conversation::create([
+                    "type" => "private"
+                ]);
+                $conversation->users()->attach($userIds);
+                return $conversation;
+            }
+            return false;
+        });
     }
 }

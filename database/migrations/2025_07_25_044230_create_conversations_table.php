@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
             $table->string('type')->default('private');
-            $table->foreignId('last_message_id')->nullable()->constrained('messages')->onDelete("set null");
+            $table->foreignId('last_message_id')->nullable()->constrained('messages');
             $table->timestamps();
         });
     }

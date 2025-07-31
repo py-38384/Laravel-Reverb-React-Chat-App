@@ -48,4 +48,11 @@ class ChatController extends Controller
         broadcast(new SendMessage($newMessage))->toOthers();
         return redirect()->back();
     }
+    public function chat_start(User $user){
+        $current_user = auth()->user();
+        $chat = $this->chatServices->getOrCreatePrivateConversation($current_user->id, $user->id);
+        dd($chat);
+        if($current_user->conversations()->where('user','user'))
+        return response()->json(["status" => "success", "message" => "Request reached successfully"]);
+    }
 }

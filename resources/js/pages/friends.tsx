@@ -30,9 +30,7 @@ export default function Request({ users }: { users: PaginateInterface }) {
     const [showPagination, setShowPagination] = useState(true);
     const [searchInput, setSearchInput] = useState('');
     const debouncedSearchInput = useDebounce(searchInput);
-    const {} = useForm({
-
-    })
+    const startConversation = useForm({user_id: ''})
     const fetchSearchUserData = async (debouncedSearchInput: string) => {
         const res = await fetch('/api/users/search',{
             method: "POST",
@@ -51,7 +49,7 @@ export default function Request({ users }: { users: PaginateInterface }) {
     const { data, isSuccess, refetch, isLoading, isError } = useQuery({
         queryKey: ["search", debouncedSearchInput],
         queryFn: () => fetchSearchUserData(debouncedSearchInput),
-        enabled: !!debouncedSearchInput, // only run query if searchTerm is not empty
+        enabled: !!debouncedSearchInput,
     });
     useEffect(() => {
         isSuccess? setUserData(data): null
@@ -70,41 +68,12 @@ export default function Request({ users }: { users: PaginateInterface }) {
             setShowPagination(false)
         }
     }
-    const handleFriendRequest = async(id: string, oparation: string) =>{
-        const res = await fetch('/api/handle/request',{
-            method: "POST",
-            headers: {
-                accept: "application/json",
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${bearerToken}`,
-            },
-            body: JSON.stringify({
-                id: id,
-                oparation: oparation,
-            })
+    const handleStartConversation = async(id: string) => {
+        startConversation.post(route('chat.start',id), {
+            onSuccess: (page) => {
+                console.log(page.props);
+            }
         })
-        const data = await res.json() 
-        if(data?.status == 'success'){
-            setUserData(preUserData => preUserData.filter(user => user.id !== id))
-        }
-    }
-    const handleCancelFriendRequest = async(id: string) =>{
-        const res = await fetch('/api/remove/request',{
-            method: "POST",
-            headers: {
-                accept: "application/json",
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${bearerToken}`,
-            },
-            body: JSON.stringify({
-                id: id
-            })
-        })
-        const data = await res.json() 
-        console.log(data);
-        if(data?.status == 'success'){
-            setUserData(preUserData => preUserData.map(user => user.id === id? {...user, is_pending: false}: user ))
-        }
     }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -152,10 +121,10 @@ export default function Request({ users }: { users: PaginateInterface }) {
                                         <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{user.email}</td>
                                         <td className="relative border border-gray-300 px-4 py-2 dark:border-gray-700">
                                             <div className="flex">
-                                                    <button title='Accept Request' onClick={() => handleFriendRequest(user.id, 'accept')}>
+                                                    <button title='Send Message' onClick={() => handleStartConversation(user.id)}>
                                                         <MessageSquare className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
                                                     </button>
-                                                    <button title='Reject Request' onClick={() => handleFriendRequest(user.id, 'reject')}>
+                                                    <button title='Unfriend'>
                                                         <UserMinus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
                                                     </button>
                                             </div>

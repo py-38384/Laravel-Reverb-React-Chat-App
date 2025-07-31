@@ -9,6 +9,10 @@ class Conversation extends Model
 {
     protected $guarded = ['id', 'created_at','updated_at'];
     public function users(){
-        return self::belongsToMany(User::class, "conversation_user",'user_id','conversation_id');
+        return self::belongsToMany(User::class, "conversation_user",'conversation_id','user_id');
+    }
+    public function lastMessage()
+    {
+        return $this->belongsTo(Message::class, 'last_message_id');
     }
 }

@@ -53,7 +53,7 @@ class User extends Authenticatable
     }
     public function conversations()
     {
-        return self::belongsToMany(Conversation::class, "conversation_user", 'conversation_id', 'user_id');
+        return self::belongsToMany(Conversation::class, "conversation_user", 'user_id', 'conversation_id');
     }
     public function receivedFriendships()
     {
@@ -73,7 +73,6 @@ class User extends Authenticatable
             })
             ->get()
             ->map(function ($friendship) use ($authId) {
-                // Return the opposite user (the friend)
                 return $friendship->requester_id == $authId
                     ? $friendship->addressee_id
                     : $friendship->requester_id;

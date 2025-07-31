@@ -1,12 +1,11 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { User } from '@/types/model';
+import { Conversations, User } from '@/types/model';
 import { useInitials } from '@/hooks/use-initials';
 import useCurrentUser from '@/hooks/use-current-user';
 import { useEcho } from '@laravel/echo-react';
 import { Message } from '@/types/model';
-import { UserPaginate } from '@/types/paginate';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,7 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Messages({users}: {users: UserPaginate}) {
+export default function Messages({conversations}: {conversations: Conversations[]}) {
     const getInitials = useInitials()
     const currentUser = useCurrentUser()
     return (
@@ -26,7 +25,7 @@ export default function Messages({users}: {users: UserPaginate}) {
             <table className="table-auto w-full border-collapse border border-gray-300 dark:border-gray-700">
                 <thead>
                     <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white">
-                        <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Photo</th>
+                        {/* <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Photo</th> */}
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Name</th>   
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Last Message</th>   
                         <th className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-left w-12">Last Message Time</th>   
@@ -35,15 +34,17 @@ export default function Messages({users}: {users: UserPaginate}) {
                     </tr>
                 </thead>
                 <tbody>
-                        {users.data.map((user: User, index: number) => (
-                        <tr key={user.id}>
-                            <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">
+                        {conversations.map((conversation: Conversations, index: number) => (
+                        <tr key={conversation.id}>
+                            {/* <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">
                                 {user.image? (
                                     <img className='w-[45px] h-[45px] rounded-full flex items-center justify-center' src={`/${user.image}`} alt=""></img>
                                 ) : (
                                     <div className='bg-gray-200 w-[45px] h-[45px] rounded-full flex items-center justify-center'>{getInitials(user.name)}</div>
                                 )}
-                                </td>
+                                </td> */}
+
+                            {/* Work Start From Here */}
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.name}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage?.message? user.lastMessage?.message: "N/A"}</td>
                             <td className="border border-gray-300 dark:border-gray-700 px-4 py-2">{user.lastMessage ? user.lastMessage?.created_at_human: "N/A"}</td>

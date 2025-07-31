@@ -22,8 +22,8 @@ class UserController extends Controller
      * Description: Get all the other user and display it to the dashboard. 
      */
     public function messages() {
-        $users = $this->userService->getAllOtherUser();
-        return Inertia::render("messages",["users" => $users]);
+        $conversations = auth()->user()->conversations()->with(['users','lastMessage'])->select(['conversations.created_at','conversations.id','type'])->get();
+        return Inertia::render("messages",["conversations" => $conversations]);
     }
     public function index() {
         $users = $this->userService->getAllOtherUser();
@@ -38,4 +38,5 @@ class UserController extends Controller
         $friends = User::whereIn('id',$friendIds)->select(['id','name','image','email'])->paginate(10);
         return Inertia::render("friends",["users" => $friends]);
     }
+
 }
