@@ -1,6 +1,6 @@
 export interface MessageForm{
     message: string;
     files: File[] | null;
-    receiver_id: string;
+    conversation_id: string;
     [key: string]: any;
 }

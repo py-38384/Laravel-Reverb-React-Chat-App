@@ -17,28 +17,27 @@ class ImageController extends Controller
     }
     public function __invoke($image_id){
         try {
-            //code...
             $user = auth()->user();
             if(!$user){
                 abort(404);
             }
             $preview = request()->query('preview');
-            $image = ImageModel::find($image_id);
-    
-            $auth_user_id = $user->id;
-            $other_user_id = $image->user_id;
-            $message_exist = $this->chat_services->chat_exist($auth_user_id, $other_user_id);
-            if($image->user_id == $user->id || $message_exist){
-                if($preview){
-                    $manager = new ImageManager(new \Intervention\Image\Drivers\Gd\Driver); // or Imagick
-                    $image_compressed = $manager->read(storage_path($image->full_path))
-                                    ->scaleDown(width: 400)
-                                    ->toJpeg(50);
-                    return response($image_compressed, 200)->header('Content-Type', 'image/jpeg');
+            $image = ImageModel::with('message')->find($image_id);
+            if($image->message){
+                $conversation = $image->message->conversation;
+                if($conversation->users->contains('id',$user->id)){
+                    if($preview){
+                        $manager = new ImageManager(new \Intervention\Image\Drivers\Gd\Driver);
+                        $image_compressed = $manager->read(storage_path($image->full_path))
+                        ->scaleDown(width: 400)
+                        ->toJpeg(50);
+                        return response($image_compressed, 200)->header('Content-Type', 'image/jpeg');
+                    }
+                    return response()->file(storage_path($image->full_path));
                 }
-                return response()->file(storage_path($image->full_path));
+                abort(404);
             }
-            abort(404);
+            return response()->file(storage_path($image->full_path));
         } catch (\Throwable $th) {
             logger($th->getMessage());
             abort(404);

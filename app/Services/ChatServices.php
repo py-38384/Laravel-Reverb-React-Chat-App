@@ -25,7 +25,7 @@ class ChatServices
                 $originalName = $file->getClientOriginalName();
                 $file_full_path = $file->store('message/image','storage');
 
-                $message->images()::create([
+                $message->images()->create([
                     'user_id' => auth()->id(),
                     'original_name' => $originalName,
                     'mime_type' => $mimetype,
@@ -33,13 +33,13 @@ class ChatServices
                 ]);
             }
         }
-        return $this->chatRepository->create($data);
+        return $message;
     }
-    public function getAllMessage($user){
+    public function getAllMessage($conversation){
         $groupedMessages = [];
         $currentGroup = [];
         $previousSender = null;
-        $allMessages =  $this->chatRepository->all(auth()->id(), $user->id);
+        $allMessages =  $this->chatRepository->all($conversation);
         foreach($allMessages as $messages){
             if($previousSender != $messages->sender_id){
                 if(!empty($currentGroup)){

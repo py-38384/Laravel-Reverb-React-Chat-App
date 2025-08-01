@@ -2,7 +2,8 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, ImageIcon, SendHorizonal, X } from "lucide-react"
-import { User, Message, MessageEvent } from '@/types/model';
+import { User, Message, Conversations } from '@/types/model';
+import { MessageEvent } from '@/types/event';
 import { useForm } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import React, { useEffect, useState } from 'react';
@@ -10,6 +11,7 @@ import { MessageForm } from '@/types/form';
 import ChatContainer from '@/components/chat-container';
 import useCurrentUser from '@/hooks/use-current-user';
 import { useInitials } from '@/hooks/use-initials';
+import { getOtherUserFromPrivateChat } from '@/helper';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -18,11 +20,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Chat({user, messages, unReadMessages}: {user: User, messages: Message[][], unReadMessages: Message[]}) {
+export default function Chat({conversation, messages, unReadMessages}: {conversation: Conversations, messages: Message[][], unReadMessages: Message[]}) {
+    console.log(messages);
+    const otherUser = getOtherUserFromPrivateChat(conversation)
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
         files: [],
-        receiver_id: user.id
+        conversation_id: conversation.id
     })
     const currentUser = useCurrentUser()
     const getInitials = useInitials()
@@ -55,7 +59,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
             if (prevCurrentMessages.length > 0 &&
                 (
                     (prevCurrentMessages[prevCurrentMessages.length - 1][0].sender_id === currentUser.id && messageObj.sender_id === currentUser.id) ||
-                    (prevCurrentMessages[prevCurrentMessages.length - 1][0].sender_id === user.id && messageObj.sender_id === user.id)
+                    (prevCurrentMessages[prevCurrentMessages.length - 1][0].sender_id === otherUser.id && messageObj.sender_id === otherUser.id)
                 )
             ) {
                 const lastGroup = prevCurrentMessages[prevCurrentMessages.length - 1];
@@ -77,8 +81,8 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
         setCurrentUnreadMessage(prev => [...prev, messageObj])
     }
     useEcho(
-        `message-channel.${currentUser.id}`,
-        "SendMessage",
+        `conversation.${conversation.id}`,
+        `SendMessage`,
         handleMessageReceive,
     );
     return (
@@ -101,14 +105,14 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                         </div>
                         <div className="recipient-dp-header-and-idicator">
                             <div className="recipient-header-dp">
-                                {user.image? (
-                                    <img src={`/${user.image}`} alt=""></img>
+                                {otherUser.image? (
+                                    <img src={`/${otherUser.image}`} alt=""></img>
                                 ) : (
-                                    <div className='bg-gray-200 w-[45px] h-[45px] rounded-full flex items-center justify-center'>{getInitials(user.name)}</div>
+                                    <div className='bg-gray-200 w-[45px] h-[45px] rounded-full flex items-center justify-center'>{getInitials(otherUser.name)}</div>
                                 )}
                             </div>
                             <div className="name-and-idicator">
-                                <h4 className="recipient-name text-2xl font-extrabold">{user.name}</h4>
+                                <h4 className="recipient-name text-2xl font-extrabold">{otherUser.name}</h4>
                                 <div className="idicator">
                                     <span
                                         className="idicator-icon"
@@ -129,7 +133,7 @@ export default function Chat({user, messages, unReadMessages}: {user: User, mess
                         </span>
                     </div>
                 </div>
-                <ChatContainer user={user} messages={currentMessages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
+                <ChatContainer user={otherUser} messages={currentMessages} currentUnreadMessage={currentUnreadMessage} setCurrentUnreadMessage={setCurrentUnreadMessage}/>
                 {data.files && data.files.length > 0 ? (
                 <div className='bg-gray-100 dark:bg-black mb-18 flex p-2 absolute bottom-0 gap-2 overflow-x-scroll w-fit no-scrollbar'>
                     {data.files.map((file, index) => (

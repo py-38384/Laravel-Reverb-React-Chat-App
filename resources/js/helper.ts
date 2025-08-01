@@ -1,3 +1,6 @@
+import useCurrentUser from "./hooks/use-current-user";
+import { Conversations } from "./types/model";
+
 export const setTokenToTheLocalStorage = ($token: string) => {
     localStorage.setItem("bearerToken",$token);
     return true
@@ -58,4 +61,9 @@ export const checkTokenValidation = async (token: string) => {
         return false;
     }
 
+}
+export const getOtherUserFromPrivateChat = (conversation: Conversations) => {
+    const currentUser = useCurrentUser();
+    const bothUser = conversation.users
+    return bothUser[0].id !== currentUser.id? bothUser[0]: bothUser[1]; 
 }

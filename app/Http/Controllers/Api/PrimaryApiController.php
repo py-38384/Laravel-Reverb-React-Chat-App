@@ -42,7 +42,7 @@ class PrimaryApiController extends Controller
             if($result){
                 return response()->json([
                     "status" => "success",
-                    "Message" => "Message read status update successful"
+                    "Message" => "Message read status update successful"    
                 ])->setStatusCode(200);
             }
             return response()->json([

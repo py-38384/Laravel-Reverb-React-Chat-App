@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('messages', function (Blueprint $table) {
-            $table->foreignId("conversation_id")->constrained("conversations")->onDelete("cascade");
+            $table->ulid("conversation_id")->constrained("conversations")->onDelete("cascade");
         });
     }
 

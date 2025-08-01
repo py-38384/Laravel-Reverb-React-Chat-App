@@ -19,11 +19,9 @@ class ChatRepository implements ChatRepositoryInterface
         $newMessage->created_at_human = $newMessage->created_at->diffForHumans();
         return $newMessage;
     }
-    public function all($user_id = '', $sender_id = ''){
-        if($user_id && !$sender_id){
-            $messages = Message::where('receiver_id', $user_id)->orderBy('created_at')->get();
-        } else if($user_id && $sender_id){
-            //work start from here after namaz
+    public function all($conversation = null){
+        if($conversation){
+            $messages = Message::where('conversation_id', $conversation->id)->with('images:id,message_id')->orderBy('created_at')->get();
         } else {
             $messages = Message::orderBy('created_at')->get();
         }

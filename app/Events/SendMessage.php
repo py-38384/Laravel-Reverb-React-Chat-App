@@ -17,7 +17,7 @@ class SendMessage implements ShouldBroadcastNow
     public $message;
     public function __construct($newMessage)
     {
-        $this->message = $newMessage->load('sender:id,name', 'receiver:id,name');
+        $this->message = $newMessage->load('sender:id,name', 'conversation','images');
     }
 
     /**

@@ -15,35 +15,21 @@ class ChatController extends Controller
     public function __construct(ChatServices $chatServices){
         $this->chatServices = $chatServices;
     }
-    public function show(User $user){
-        $messages = $this->chatServices->getAllMessage($user);
-        $unReadMessages = $this->chatServices->getUnreadMessage($user); 
-        return Inertia::render('chat',['user' => $user, 'messages' => $messages, 'unReadMessages' => $unReadMessages]);
+    public function show($chat_id){
+        $conversation = Conversation::with('users')->find($chat_id);
+        $messages = $this->chatServices->getAllMessage($conversation);
+        // $unReadMessages = $this->chatServices->getUnreadMessage($user); 
+        return Inertia::render('chat',['conversation' => $conversation, 'messages' => $messages, 'unReadMessages' => []]);
     }
     public function store(ChatRequest $request){
-        $conversation = null;
-        if(!$request->conversation_id){
-            $sender_id = auth()->id();
-            $receiver_id = $request->receiver_id;
-            $conversation = Conversation::where('type','private')
-                        ->whereHas('users', function ($query) use ($sender_id){
-                            $query->where('user_id',$sender_id);
-                        })
-                        ->whereHas('users', function ($query) use ($receiver_id){
-                            $query->where('user_id', $receiver_id);
-                        })->first();
-            if(!$conversation){
-                $conversation = new Conversation();
-                $conversation->users()->sync([$sender_id, $receiver_id]);
-            }
-        } else {
-            $conversation = Conversation::find($request->conversation_id);
-        }
+        $conversation = Conversation::find($request->conversation_id);
         $newMessage = $this->chatServices->create([
             "sender_id" => auth()->id(),
             "conversation_id" => $conversation->id,
             "message" => $request->message, 
         ]);
+        $conversation->last_message_id = $newMessage->id;
+        $conversation->save();
         
         broadcast(new SendMessage($newMessage))->toOthers();
         return redirect()->back();
@@ -51,7 +37,6 @@ class ChatController extends Controller
     public function chat_start(User $user){
         $current_user = auth()->user();
         $chat = $this->chatServices->getOrCreatePrivateConversation($current_user->id, $user->id);
-        dd($chat);
         if($current_user->conversations()->where('user','user'))
         return response()->json(["status" => "success", "message" => "Request reached successfully"]);
     }
