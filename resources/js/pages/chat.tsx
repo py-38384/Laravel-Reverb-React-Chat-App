@@ -21,7 +21,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Chat({conversation, messages, unReadMessages}: {conversation: Conversations, messages: Message[][], unReadMessages: Message[]}) {
-    console.log(messages);
     const otherUser = getOtherUserFromPrivateChat(conversation)
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',

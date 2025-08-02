@@ -32,25 +32,25 @@ const ChatContainer = ({
     },[user, messages])
     const getInitials = useInitials();
     const makeAsRead = async (payload: number[]) => {
-        const bearerToken = localStorage.getItem('bearerToken');
-        const res = await fetch('/api/update-message-read-status', {
-            method: 'POST',
-            headers: {
-                accept: 'application/json',
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${bearerToken}`,
-            },
-            body: JSON.stringify({
-                user_id: user.id,
-                unread_message_ids: payload,
-            }),
-        });
-        if (res.status === 200) {
-            const resData = await res.json();
-            if (resData.status === 'success') {
-                setCurrentUnreadMessage([]);
-            }
-        }
+        // const bearerToken = localStorage.getItem('bearerToken');
+        // const res = await fetch('/api/update-message-read-status', {
+        //     method: 'POST',
+        //     headers: {
+        //         accept: 'application/json',
+        //         'Content-Type': 'application/json',
+        //         Authorization: `Bearer ${bearerToken}`,
+        //     },
+        //     body: JSON.stringify({
+        //         user_id: user.id,
+        //         unread_message_ids: payload,
+        //     }),
+        // });
+        // if (res.status === 200) {
+        //     const resData = await res.json();
+        //     if (resData.status === 'success') {
+        //         setCurrentUnreadMessage([]);
+        //     }
+        // }
     };
     useEffect(() => {
         if (!currentUnreadMessage.length) return;

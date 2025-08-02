@@ -91,6 +91,7 @@ export default function Request({ users }: { users: PaginateInterface }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
+            {usersData.length > 0?(
             <div className="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
                 <div className="overflow-x-auto">
                     <div>
@@ -151,6 +152,9 @@ export default function Request({ users }: { users: PaginateInterface }) {
                     )}
                 </div>
             </div>
+            ):(
+            <h1 className='w-full flex items-center justify-center h-[30rem] text-center text-3xl font-semibold'>No Friend Request Found!</h1>
+            )}
         </AppLayout>
     );
 }

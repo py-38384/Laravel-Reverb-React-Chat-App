@@ -27,8 +27,16 @@ class SendMessage implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('conversation.' . $this->message->conversation_id)
-        ];
+        $conversation = $this->message->conversation;
+        $allUser = $conversation->users;
+        $otherUsers = $allUser->filter(function($user){
+            return $user->id != auth()->id();
+        });
+        $channels = [];
+        foreach ($otherUsers as $key => $user) {
+            $channels[] = new PresenceChannel('user.'.$user->id); 
+        }
+        $channels[] = new PrivateChannel('conversation.' . $this->message->conversation_id);
+        return $channels;
     }
 }

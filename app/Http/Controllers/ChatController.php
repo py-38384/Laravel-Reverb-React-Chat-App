@@ -37,7 +37,9 @@ class ChatController extends Controller
     public function chat_start(User $user){
         $current_user = auth()->user();
         $chat = $this->chatServices->getOrCreatePrivateConversation($current_user->id, $user->id);
-        if($current_user->conversations()->where('user','user'))
-        return response()->json(["status" => "success", "message" => "Request reached successfully"]);
+        if($chat){
+            return redirect()->route('chat',[$chat->id]);
+        }
+        return response()->json(["status" => "error", "message" => "Conversation Not Found. Something Went Wrong!"]);
     }
 }
