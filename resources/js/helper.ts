@@ -67,3 +67,28 @@ export const getOtherUserFromPrivateChat = (conversation: Conversations) => {
     const bothUser = conversation.users
     return bothUser[0].id !== currentUser.id? bothUser[0]: bothUser[1]; 
 }
+export function formatTimeDifference(inputDate: Date | number | string): string {
+    const date = new Date(inputDate);
+    const now = new Date();
+
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const diffInDays = diffInSeconds / (60 * 60 * 24);
+
+    if (diffInDays < 4) {
+        const hrs = Math.floor(diffInSeconds / 3600);
+        const mins = Math.floor((diffInSeconds % 3600) / 60);
+        const secs = diffInSeconds % 60;
+
+        const parts = [];
+        if (hrs) parts.push(`${hrs}h`);
+        if (mins) parts.push(`${mins}m`);
+        if (secs || parts.length === 0) parts.push(`${secs}s`);
+
+        return parts.join(' ') + ' ago';
+    } else {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+}

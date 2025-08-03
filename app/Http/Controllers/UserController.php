@@ -22,7 +22,11 @@ class UserController extends Controller
      * Description: Get all the other user and display it to the dashboard. 
      */
     public function messages() {
-        $conversations = auth()->user()->conversations()->with(['users','lastMessage'])->select(['conversations.created_at','conversations.id','type'])->get();
+        // $conversations = auth()->user()->conversations()->with(['users','lastMessage'])->select(['conversations.created_at','conversations.id','type','last_message_id'])->get()->map(function($conversation){
+        //     $conversation->lastMessage->created_at_sec = $conversation->lastMessage? round($conversation->lastMessage->created_at->diffInSeconds(now())): '';
+        //     return $conversation;
+        // });
+        $conversations = auth()->user()->conversations()->with(['users','lastMessage'])->select(['conversations.created_at','conversations.id','type','last_message_id'])->get();
         // dd($conversations);
         return Inertia::render("messages",["conversations" => $conversations]);
     }

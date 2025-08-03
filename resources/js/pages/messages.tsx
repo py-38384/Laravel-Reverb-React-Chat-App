@@ -1,4 +1,4 @@
-import { getOtherUserFromPrivateChat } from '@/helper';
+import { formatTimeDifference, getOtherUserFromPrivateChat } from '@/helper';
 import useCurrentUser from '@/hooks/use-current-user';
 import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
@@ -6,6 +6,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Conversations } from '@/types/model';
 import { Head, Link } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
+import { SendMessageEvent } from '@/types/event';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,20 +17,37 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Messages({ conversations }: { conversations: Conversations[] }) {
+    const [_, setTick] = useState(0);
+    const [currentConversations, setCurrentConversations] = useState(conversations)
     const getInitials = useInitials()
     const currentUser = useCurrentUser()
-    const handleMessageReceive = (e: MessageEvent) => {
+    const handleMessageReceive = (e: SendMessageEvent) => {
         console.log(e)
+        const received_message = e.message;
+        setCurrentConversations(currentConversations => currentConversations.map(conversations => {
+            if(conversations.id == received_message.conversation_id){
+                conversations.last_message.message = received_message.message
+                conversations.last_message.created_at = received_message.created_at
+                return conversations
+            }
+            return conversations
+        }))
     }
     useEcho(
         `user.${currentUser.id}`,
         `SendMessage`,
         handleMessageReceive,
     );
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTick(t => t + 1);
+        }, 10000)
+        return () => clearInterval(interval)
+    }, [])
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
-            {conversations.length > 0?(
+            {currentConversations.length > 0?(
             <div className="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
                 <div className="overflow-x-auto">
                     <table className="w-full table-auto border-collapse border border-gray-300 dark:border-gray-700">
@@ -38,12 +57,11 @@ export default function Messages({ conversations }: { conversations: Conversatio
                                 <th className="w-12 border border-gray-300 px-4 py-2 text-left dark:border-gray-700">Name</th>
                                 <th className="w-12 border border-gray-300 px-4 py-2 text-left dark:border-gray-700">Last Message</th>
                                 <th className="w-12 border border-gray-300 px-4 py-2 text-left dark:border-gray-700">Last Message Time</th>
-                                <th className="w-12 border border-gray-300 px-4 py-2 text-left dark:border-gray-700">Email</th>
                                 <th className="w-12 border border-gray-300 px-4 py-2 text-left dark:border-gray-700">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {conversations.map((conversation: Conversations, index: number) => {
+                            {currentConversations.map((conversation: Conversations, index: number) => {
                                 const otherUser = conversation.type === 'private' ? getOtherUserFromPrivateChat(conversation) : null;
                                 if (conversation.type === 'private') {
                                     return (
@@ -64,9 +82,9 @@ export default function Messages({ conversations }: { conversations: Conversatio
                                             <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">
                                                 {getOtherUserFromPrivateChat(conversation).name}
                                             </td>
-                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">Test</td>
-                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">Test</td>
-                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">Test</td>
+                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{conversation.last_message?.message? conversation.last_message.message: "No message"}</td>
+                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{conversation.last_message?.created_at? formatTimeDifference(conversation.last_message.created_at): "No message"}
+                                            </td>
                                             <td className="relative border border-gray-300 px-4 py-2 dark:border-gray-700">
                                                 <Link href={route('chat', conversation.id)}>
                                                     <svg

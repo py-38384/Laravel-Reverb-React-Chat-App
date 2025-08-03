@@ -30,7 +30,8 @@ class ChatController extends Controller
         ]);
         $conversation->last_message_id = $newMessage->id;
         $conversation->save();
-        dd($conversation);
+
+        // dd($conversation);
         
         broadcast(new SendMessage($newMessage))->toOthers();
         return redirect()->back();

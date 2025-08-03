@@ -3,7 +3,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, ImageIcon, SendHorizonal, X } from "lucide-react"
 import { User, Message, Conversations } from '@/types/model';
-import { MessageEvent } from '@/types/event';
+import { MessageObject } from '@/types/event';
 import { useForm } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import React, { useEffect, useState } from 'react';
@@ -51,7 +51,7 @@ export default function Chat({conversation, messages, unReadMessages}: {conversa
         setData('files', updatedFiles);
     }
 
-    const handleMessageReceive = (e: MessageEvent) => {
+    const handleMessageReceive = (e: MessageObject) => {
         const messageObj: Message = typeof e.message === "string" ? JSON.parse(e.message) : e.message;
 
         setCurrentMessages((prevCurrentMessages: Message[][]) => {
