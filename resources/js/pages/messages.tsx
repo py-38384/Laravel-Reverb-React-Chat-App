@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Conversations } from '@/types/model';
 import { Head, Link } from '@inertiajs/react';
+import { useEcho } from '@laravel/echo-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -14,9 +15,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Messages({ conversations }: { conversations: Conversations[] }) {
-    console.log(conversations);
-    const getInitials = useInitials();
-    const currentUser = useCurrentUser();
+    const getInitials = useInitials()
+    const currentUser = useCurrentUser()
+    const handleMessageReceive = (e: MessageEvent) => {
+        console.log(e)
+    }
+    useEcho(
+        `user.${currentUser.id}`,
+        `SendMessage`,
+        handleMessageReceive,
+    );
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />

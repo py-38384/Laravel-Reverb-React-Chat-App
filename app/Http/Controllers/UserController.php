@@ -23,6 +23,7 @@ class UserController extends Controller
      */
     public function messages() {
         $conversations = auth()->user()->conversations()->with(['users','lastMessage'])->select(['conversations.created_at','conversations.id','type'])->get();
+        // dd($conversations);
         return Inertia::render("messages",["conversations" => $conversations]);
     }
     public function index() {

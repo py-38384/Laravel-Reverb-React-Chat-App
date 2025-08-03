@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('images', function (Blueprint $table) {
             $table->ulid("id")->primary();
-            $table->ulid("user_id")->constrained("users")->onDelete("set null")->nullable();
-            $table->foreignId("message_id")->constrained("messages")->onDelete("set null")->nullable();
+            $table->ulid("user_id")->nullable()->constrained("users")->onDelete("set null");
+            $table->foreignId("message_id")->nullable()->constrained("messages")->onDelete("set null");
             $table->string('original_name');
             $table->string('mime_type');
             $table->string('full_path');

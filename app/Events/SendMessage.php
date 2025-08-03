@@ -4,7 +4,6 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -34,7 +33,7 @@ class SendMessage implements ShouldBroadcastNow
         });
         $channels = [];
         foreach ($otherUsers as $key => $user) {
-            $channels[] = new PresenceChannel('user.'.$user->id); 
+            $channels[] = new PrivateChannel('user.'.$user->id); 
         }
         $channels[] = new PrivateChannel('conversation.' . $this->message->conversation_id);
         return $channels;
