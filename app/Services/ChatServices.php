@@ -17,23 +17,32 @@ class ChatServices
         $this->chatRepository = $chatRepository;
     }
     public function create($data){
-        $message = $this->chatRepository->create($data);
-        $files = isset(request()->allFiles()['files'])? request()->allFiles()['files']: null;
-        if(is_iterable($files) && count($files) > 0){
-            foreach($files as $file){
-                $mimetype = $file->getMimeType();
-                $originalName = $file->getClientOriginalName();
-                $file_full_path = $file->store('message/image','storage');
-
-                $message->images()->create([
-                    'user_id' => auth()->id(),
-                    'original_name' => $originalName,
-                    'mime_type' => $mimetype,
-                    'full_path' => $file_full_path,
-                ]);
+        DB::beginTransaction();
+        try {
+            $message = $this->chatRepository->create($data);
+            $files = isset(request()->allFiles()['files'])? request()->allFiles()['files']: null;
+            if(is_iterable($files) && count($files) > 0){
+                foreach($files as $file){
+                    $mimetype = $file->getMimeType();
+                    $originalName = $file->getClientOriginalName();
+                    $file_full_path = $file->store('message/image','storage');
+    
+                    $message->images()->create([
+                        'user_id' => auth()->id(),
+                        'original_name' => $originalName,
+                        'mime_type' => $mimetype,
+                        'full_path' => $file_full_path,
+                    ]);
+                }
             }
+            DB::commit();
+            return $message;
+        } catch (\Throwable $th) {
+            logger()->error($th->getMessage());
+            DB::rollBack();
+            return false;
         }
-        return $message;
+
     }
     public function getAllMessage($conversation){
         $groupedMessages = [];

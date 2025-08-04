@@ -18,15 +18,34 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Messages({ conversations }: { conversations: Conversations[] }) {
     const [_, setTick] = useState(0);
+    const [pageTitle, setPageTitle] = useState('All Messages')
+    const [unSeenMessageCount, setUnSeenMessageCount] = useState(0)
+
     const [currentConversations, setCurrentConversations] = useState(conversations)
     const getInitials = useInitials()
     const currentUser = useCurrentUser()
     const handleMessageReceive = (e: SendMessageEvent) => {
-        console.log(e)
-        const received_message = e.message;
+        const received_message = e.message
+        const conversationType = received_message.conversation.type
+        const sender = received_message.sender
+        
+        setUnSeenMessageCount(prevUnSeenMessageCount => {
+            const newUnSeenMessageCount = prevUnSeenMessageCount+1;
+            const titleText = conversationType === 'private'? `(${newUnSeenMessageCount}) New Message From ${sender.name}`: `(${newUnSeenMessageCount}) New Message`
+            setPageTitle(titleText)
+            return newUnSeenMessageCount
+        })
+
         setCurrentConversations(currentConversations => currentConversations.map(conversations => {
             if(conversations.id == received_message.conversation_id){
-                conversations.last_message.message = received_message.message
+                conversations.new = true
+                if(received_message.message){
+                    conversations.last_message.message = received_message.message
+                } else if(received_message.images.length > 0){
+                    conversations.last_message.message = `${received_message.images.length} Image${received_message.images.length > 1? 's': ''} Received`
+                } else {
+                    conversations.last_message.message = 'Messages Received'
+                }
                 conversations.last_message.created_at = received_message.created_at
                 return conversations
             }
@@ -38,15 +57,34 @@ export default function Messages({ conversations }: { conversations: Conversatio
         `SendMessage`,
         handleMessageReceive,
     );
+    const handleVisibilitychange = () => {
+        if(!document.hidden){
+            setUnSeenMessageCount(0)
+            setPageTitle("All Messages")
+            setCurrentConversations(currentConversations => currentConversations.map(conversation => {
+                if(conversation?.new){
+                    conversation.new = false;
+                    return conversation;
+                }
+                return conversation;
+            }))
+        }
+    } 
     useEffect(() => {
         const interval = setInterval(() => {
             setTick(t => t + 1);
         }, 10000)
-        return () => clearInterval(interval)
+
+        document.addEventListener('visibilitychange', handleVisibilitychange)
+        
+        return () => {
+            clearInterval(interval)
+            document.removeEventListener('visibilitychange', handleVisibilitychange)
+        }
     }, [])
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="List of Users" />
+            <Head title={pageTitle} />
             {currentConversations.length > 0?(
             <div className="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
                 <div className="overflow-x-auto">
@@ -80,10 +118,22 @@ export default function Messages({ conversations }: { conversations: Conversatio
                                                 )}
                                             </td>
                                             <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">
-                                                {getOtherUserFromPrivateChat(conversation).name}
+                                                {conversation.new? 
+                                                (
+                                                    <b>{getOtherUserFromPrivateChat(conversation).name}</b>
+                                                ):getOtherUserFromPrivateChat(conversation).name}
                                             </td>
-                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{conversation.last_message?.message? conversation.last_message.message: "No message"}</td>
-                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{conversation.last_message?.created_at? formatTimeDifference(conversation.last_message.created_at): "No message"}
+                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">
+                                                {conversation.new? 
+                                                (
+                                                    <b>{conversation.last_message?.message? conversation.last_message.message: "No message"}</b>
+                                                ):conversation.last_message?.message? conversation.last_message.message: "No message"}
+                                            </td>
+                                            <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">
+                                                {conversation.new?
+                                                (
+                                                    <b>{conversation.last_message?.created_at? formatTimeDifference(conversation.last_message.created_at): "No message"}</b>
+                                                ):(conversation.last_message?.created_at? formatTimeDifference(conversation.last_message.created_at): "No message")}
                                             </td>
                                             <td className="relative border border-gray-300 px-4 py-2 dark:border-gray-700">
                                                 <Link href={route('chat', conversation.id)}>
@@ -102,8 +152,8 @@ export default function Messages({ conversations }: { conversations: Conversatio
                                                         />
                                                     </svg>
                                                 </Link>
-                                                <span className={`absolute top-0 left-[45px] ${false ? 'block' : 'hidden'} font-bold text-red-500`}>
-                                                    test
+                                                <span className={`absolute top-0 left-[45px] ${unSeenMessageCount ? 'block' : 'hidden'} font-bold text-red-500`}>
+                                                    {unSeenMessageCount}
                                                 </span>
                                             </td>
                                         </tr>
@@ -137,8 +187,8 @@ export default function Messages({ conversations }: { conversations: Conversatio
                                                         />
                                                     </svg>
                                                 </Link>
-                                                <span className={`absolute top-0 left-[45px] ${false ? 'block' : 'hidden'} font-bold text-red-500`}>
-                                                    test
+                                                <span className={`absolute top-0 left-[45px] ${unSeenMessageCount ? 'block' : 'hidden'} font-bold text-red-500`}>
+                                                    {unSeenMessageCount}
                                                 </span>
                                             </td>
                                         </tr>

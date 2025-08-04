@@ -17,6 +17,7 @@ export interface Image{
     message_id: number,
 }
 export interface Message{
+    conversation_id: string,
     created_at: string,
     created_at_human: string,
     created_at_human_24h: string,
@@ -24,6 +25,7 @@ export interface Message{
     images: Image[],
     id: number
     is_read: boolean,
+    error: boolean,
     message: null | string,
     receiver_id: string,
     sender_id: string
@@ -37,6 +39,7 @@ export interface Conversations{
         user_id: string,
         conversation_id: number,
     },
+    new: boolean,
     type: string,
     users: User[],
 }

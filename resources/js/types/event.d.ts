@@ -7,6 +7,9 @@ export interface MessageObject{
     created_at_human: string,
     id: number;
     sender_id: number;
+    images: {
+        id: string,
+    }[],
     sender: {
         id: string,
         name: string

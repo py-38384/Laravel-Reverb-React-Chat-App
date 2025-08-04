@@ -92,3 +92,10 @@ export function formatTimeDifference(inputDate: Date | number | string): string 
         return `${day}/${month}/${year}`;
     }
 }
+export function getLaravelTimestamp() {
+    const now = new Date();
+    const iso = now.toISOString(); // e.g., "2025-08-04T16:59:02.123Z"
+    const [date, time] = iso.split('.');
+    const microseconds = now.getMilliseconds().toString().padStart(3, '0') + '000'; // pad to 6 digits
+    return `${date}.${microseconds}Z`;
+}

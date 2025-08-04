@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\SendMessage;
-use App\Models\Conversation;
 use App\Models\User;
 use Inertia\Inertia;
+use App\Events\SendMessage;
+use App\Models\Conversation;
 use App\Services\ChatServices;
 use App\Http\Requests\ChatRequest;
+use Illuminate\Support\Facades\Redirect;
 
 class ChatController extends Controller
 {
@@ -28,13 +29,16 @@ class ChatController extends Controller
             "conversation_id" => $conversation->id,
             "message" => $request->message, 
         ]);
-        $conversation->last_message_id = $newMessage->id;
-        $conversation->save();
-
-        // dd($conversation);
-        
-        broadcast(new SendMessage($newMessage))->toOthers();
-        return redirect()->back();
+        if($newMessage){
+            $conversation->last_message_id = $newMessage->id;
+            $conversation->save();
+            broadcast(new SendMessage($newMessage))->toOthers();
+            return redirect()->back();
+        }
+        return redirect()->back()->withErrors([
+            'status' => 'error',
+            'message' => "Couldn't process the image"
+        ]);
     }
     public function chat_start(User $user){
         $current_user = auth()->user();
