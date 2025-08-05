@@ -28,6 +28,7 @@ export default function Chat({
     messages: Message[][];
     unReadMessages: Message[];
 }) {
+    console.log(messages);
     const otherUser = getOtherUserFromPrivateChat(conversation);
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
@@ -37,44 +38,46 @@ export default function Chat({
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState(messages);
-    useEffect(() => {
-        setCurrentMessages(messages);
-    }, [messages]);
     const [currentUnreadMessage, setCurrentUnreadMessage] = useState(unReadMessages);
     const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        post(route('chat.store'), {
-            onSuccess: () => reset(),
-            onError: (error) => {
-                setCurrentMessages((preCurrentMessages) => {
-                    const lastGroup = preCurrentMessages[preCurrentMessages.length - 1];
-                    const prevMessage = lastGroup[lastGroup.length - 1];
-                    const newMessage = {
-                        conversation_id: prevMessage.conversation_id,
-                        created_at_human: '',
-                        created_at_human_24h: '',
-                        id: prevMessage.id + 1,
-                        images: [],
-                        message: error.message,
-                        sender_id: currentUser.id,
-                        created_at: getLaravelTimestamp(),
-                        updated_at: getLaravelTimestamp(),
-                        files: null,
-                        is_read: false,
-                        error: true,
-                        receiver_id: '',
-                    };
-
-                    if (prevMessage && currentUser.id === prevMessage.sender_id) {
-                        const updatedLastGroup = [...lastGroup, newMessage];
-                        return [...preCurrentMessages.slice(0, -1), updatedLastGroup];
-                    } else {
-                        return [...preCurrentMessages, [newMessage]];
-                    }
-                });
-                reset();
-            },
-        });
+        if(data.message || data.files?.length){
+            post(route('chat.store'), {
+                onSuccess: () => reset(),
+                onError: (error) => {
+                    console.log(error);
+                    setCurrentMessages((preCurrentMessages) => {
+                        const lastGroup = preCurrentMessages[preCurrentMessages.length - 1];
+                        const prevMessage = lastGroup? lastGroup[lastGroup.length - 1]: null;
+                        const newMessage = {
+                            conversation_id: conversation.id,
+                            created_at_human: '',
+                            created_at_human_24h: '',
+                            id: Date.now(),
+                            images: [],
+                            message: error.message,
+                            sender_id: currentUser.id,
+                            created_at: getLaravelTimestamp(),
+                            updated_at: getLaravelTimestamp(),
+                            files: null,
+                            is_read: false,
+                            error: true,
+                            receiver_id: '',
+                        };
+    
+                        if (prevMessage && currentUser.id === prevMessage.sender_id) {
+                            const updatedLastGroup = [...lastGroup, newMessage];
+                            const updatedMessage = [...preCurrentMessages.slice(0, -1), updatedLastGroup];
+                            return updatedMessage
+                        } else {
+                            const updatedMessage = [...preCurrentMessages, [newMessage]];
+                            return updatedMessage
+                        }
+                    });
+                    reset();
+                },
+            });
+        }
     };
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {

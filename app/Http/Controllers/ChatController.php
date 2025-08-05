@@ -18,7 +18,11 @@ class ChatController extends Controller
     }
     public function show($chat_id){
         $conversation = Conversation::with('users')->find($chat_id);
+        if(!$conversation){
+            return redirect()->route('messages');
+        }
         $messages = $this->chatServices->getAllMessage($conversation);
+        // dd($messages);
         // $unReadMessages = $this->chatServices->getUnreadMessage($user); 
         return Inertia::render('chat',['conversation' => $conversation, 'messages' => $messages, 'unReadMessages' => []]);
     }
@@ -37,7 +41,7 @@ class ChatController extends Controller
         }
         return redirect()->back()->withErrors([
             'status' => 'error',
-            'message' => "Couldn't process the image"
+            'message' => "Error! Couldn't send the message"
         ]);
     }
     public function chat_start(User $user){

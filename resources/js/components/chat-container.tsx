@@ -85,7 +85,7 @@ const ChatContainer = ({
                                     <>
                                          <div
                                             key={message.id}
-                                            className={`message message-left flex flex-col justify-center bg-gray-100 dark:bg-gray-900`}
+                                            className={`message message-left flex flex-col justify-center ${message.error?'bg-red-500':'bg-gray-100 dark:bg-gray-900'}`}
                                         >
                                             {message.images
                                                 ? message.images.map((image: Image) => (
@@ -110,7 +110,7 @@ const ChatContainer = ({
                                     <>
                                         <div key={message.id} className="message-box">
                                             <span
-                                                className={`message message-right message flex flex-col items-end bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900 ${message.images ? 'gap-1.5' : ''}`}
+                                                className={`message message-right message flex flex-col items-end ${message.error?'bg-red-500':'bg-gray-800 dark:bg-gray-100'} text-white dark:text-gray-900 ${message.images ? 'gap-1.5' : ''}`}
                                             >
                                                 {message.images
                                                     ? message.images.map((image: Image) => (
