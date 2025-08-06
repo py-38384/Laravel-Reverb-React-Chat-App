@@ -23,13 +23,14 @@ export interface Message{
     created_at_human_24h: string,
     files: null | string,
     images: Image[],
-    id: number
+    message_seen: User[],
+    id: number,
     is_read: boolean,
     error: boolean,
     message: null | string,
     receiver_id: string,
-    sender_id: string
-    updated_at: string
+    sender_id: string,
+    updated_at: string,
 }
 export interface Conversations{
     id: string,

@@ -36,24 +36,25 @@ class PrimaryApiController extends Controller
         ])->setStatusCode(200);
     }
     public function updateMessageReadStatus(Request $request){
-        $user = User::find($request->user_id);
-        if($user){
-            $result = Message::whereIn('id',$request->unread_message_ids)->where('receiver_id', auth()->id())->where('sender_id',$user->id)->update(["is_read" => true]);
-            if($result){
-                return response()->json([
-                    "status" => "success",
-                    "Message" => "Message read status update successful"    
-                ])->setStatusCode(200);
+        if(!$request->unread_message_ids){
+            abort(404);
+        }
+        logger($request->all());
+        try {
+            $unReadMessages = Message::whereIn('id',$request->unread_message_ids)->get();
+            foreach($unReadMessages as $unReadMessage){
+                $unReadMessage->message_seen()->attach(auth()->user());
             }
+            return [
+                "status" => "success",
+                "message" => "Messages Successfully Seen"
+            ];
+        } catch (\Throwable $th) {
             return response()->json([
                 "status" => "error",
-                "Message" => "Couldn't update the messages status. Something went wrong!"
-            ])->setStatusCode(500);
+                "Message" => $th->getMessage()
+            ])->setStatusCode(404);
         }
-        return response()->json([
-            "status" => "error",
-            "Message" => "Couldn't find the user"
-        ])->setStatusCode(404);
     }
     public function user_search(Request $request){
         $request->validate([

@@ -5,13 +5,9 @@ import { useEffect, useRef } from 'react';
 const ChatContainer = ({
     user,
     messages,
-    currentUnreadMessage,
-    setCurrentUnreadMessage,
 }: {
     user: User;
     messages: Message[][];
-    currentUnreadMessage: Message[];
-    setCurrentUnreadMessage: React.Dispatch<React.SetStateAction<Message[]>>;
 }) => {
     const bottomRef = useRef<HTMLDivElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -31,35 +27,6 @@ const ChatContainer = ({
         return () => clearTimeout(timeout)
     },[user, messages])
     const getInitials = useInitials();
-    const makeAsRead = async (payload: number[]) => {
-        // const bearerToken = localStorage.getItem('bearerToken');
-        // const res = await fetch('/api/update-message-read-status', {
-        //     method: 'POST',
-        //     headers: {
-        //         accept: 'application/json',
-        //         'Content-Type': 'application/json',
-        //         Authorization: `Bearer ${bearerToken}`,
-        //     },
-        //     body: JSON.stringify({
-        //         user_id: user.id,
-        //         unread_message_ids: payload,
-        //     }),
-        // });
-        // if (res.status === 200) {
-        //     const resData = await res.json();
-        //     if (resData.status === 'success') {
-        //         setCurrentUnreadMessage([]);
-        //     }
-        // }
-    };
-    useEffect(() => {
-        if (!currentUnreadMessage.length) return;
-        const payload: number[] = [];
-        currentUnreadMessage.map((message) => {
-            payload.push(message.id);
-        });
-        makeAsRead(payload);
-    }, [currentUnreadMessage]);
     return (
         <div className="chat-container p-4" ref={containerRef}>
             {messages.map((messageGroup, groupIndex) => (

@@ -28,7 +28,6 @@ export default function Chat({
     messages: Message[][];
     unReadMessages: Message[];
 }) {
-    console.log(messages);
     const otherUser = getOtherUserFromPrivateChat(conversation);
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
@@ -38,23 +37,78 @@ export default function Chat({
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState(messages);
-    const [currentUnreadMessage, setCurrentUnreadMessage] = useState(unReadMessages);
+    const markMessageAsSeen = async (updatedMessage: Message[][]) => {
+        console.log(`previousMessages from markMessageAsSeen function`)
+        console.log(updatedMessage)
+        if (document.hidden) {
+            return;
+        }
+        const unSeenMessageIds: (string | number)[] = [];
+        const latestSenderMessageGroup = [...updatedMessage].reverse().filter((messageGroup) => messageGroup[0].sender_id !== currentUser.id)?.[0];
+        latestSenderMessageGroup.forEach((message) => {
+            let currentUserNotExist = true;
+            message.message_seen.forEach((user) => {
+                if (user.id === currentUser.id) currentUserNotExist = false;
+            });
+            if (currentUserNotExist) unSeenMessageIds.push(message.id);
+        });
+        if(unSeenMessageIds.length > 0){
+            const bearerToken = localStorage.getItem('bearerToken');
+            const res = await fetch('/api/update-message-read-status', {
+                method: 'POST',
+                headers: {
+                    accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${bearerToken}`,
+                },
+                body: JSON.stringify({
+                    unread_message_ids: unSeenMessageIds,
+                }),
+            });
+            if (res.status === 200) {
+                const resData = await res.json();
+                if (resData.status === 'success') {
+                    setCurrentMessages(previousMessages => {
+                        console.log(`previousMessages from markMessageAsSeen function setCurrentMessages`)
+                        console.log(previousMessages)
+                        const updatedArray = new Array(previousMessages.length)
+    
+                        for(let i = previousMessages.length - 1; i >= 0; i--){
+                            if(previousMessages[i][0].sender_id !== currentUser.id){
+                                updatedArray[i] = previousMessages[i].map(message => ({...message, message_seen: [...message.message_seen, currentUser]}))
+                            }
+                            updatedArray[i] = previousMessages[i]
+                        }
+                        return updatedArray;
+                    });
+                }
+            }
+        }
+    };
+    useEffect(() => {
+        markMessageAsSeen(currentMessages?currentMessages:messages);
+        document.addEventListener('visibilitychange', () => markMessageAsSeen(currentMessages?currentMessages:messages));
+        return () => {
+            document.removeEventListener('visibilitychange', () => markMessageAsSeen(currentMessages?currentMessages:messages));
+        };
+    }, []);
     const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if(data.message || data.files?.length){
+        if (data.message || data.files?.length) {
             post(route('chat.store'), {
                 onSuccess: () => reset(),
                 onError: (error) => {
                     console.log(error);
                     setCurrentMessages((preCurrentMessages) => {
                         const lastGroup = preCurrentMessages[preCurrentMessages.length - 1];
-                        const prevMessage = lastGroup? lastGroup[lastGroup.length - 1]: null;
+                        const prevMessage = lastGroup ? lastGroup[lastGroup.length - 1] : null;
                         const newMessage = {
                             conversation_id: conversation.id,
                             created_at_human: '',
                             created_at_human_24h: '',
                             id: Date.now(),
                             images: [],
+                            message_seen: [],
                             message: error.message,
                             sender_id: currentUser.id,
                             created_at: getLaravelTimestamp(),
@@ -64,14 +118,14 @@ export default function Chat({
                             error: true,
                             receiver_id: '',
                         };
-    
+
                         if (prevMessage && currentUser.id === prevMessage.sender_id) {
                             const updatedLastGroup = [...lastGroup, newMessage];
                             const updatedMessage = [...preCurrentMessages.slice(0, -1), updatedLastGroup];
-                            return updatedMessage
+                            return updatedMessage;
                         } else {
                             const updatedMessage = [...preCurrentMessages, [newMessage]];
-                            return updatedMessage
+                            return updatedMessage;
                         }
                     });
                     reset();
@@ -100,16 +154,18 @@ export default function Chat({
                     (prevCurrentMessages[prevCurrentMessages.length - 1][0].sender_id === otherUser.id && messageObj.sender_id === otherUser.id))
             ) {
                 const lastGroup = prevCurrentMessages[prevCurrentMessages.length - 1];
-                // Check for duplicate by message id (or use another unique property)
                 if (!lastGroup.some((msg) => msg.id === messageObj.id)) {
-                    return [...prevCurrentMessages.slice(0, -1), [...lastGroup, messageObj as Message]];
+                    const updatedMessages = [...prevCurrentMessages.slice(0, -1), [...lastGroup, messageObj as Message]];
+                    markMessageAsSeen(updatedMessages)
+                    return updatedMessages;
                 }
+                markMessageAsSeen(prevCurrentMessages)
                 return prevCurrentMessages;
             } else {
+                markMessageAsSeen(prevCurrentMessages)
                 return [...prevCurrentMessages, [messageObj as Message]];
             }
         });
-        setCurrentUnreadMessage((prev) => [...prev, messageObj]);
     };
     useEcho(`conversation.${conversation.id}`, `SendMessage`, handleMessageReceive);
     return (
@@ -153,12 +209,7 @@ export default function Chat({
                         </span>
                     </div>
                 </div>
-                <ChatContainer
-                    user={otherUser}
-                    messages={currentMessages}
-                    currentUnreadMessage={currentUnreadMessage}
-                    setCurrentUnreadMessage={setCurrentUnreadMessage}
-                />
+                <ChatContainer user={otherUser} messages={currentMessages} />
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">
                         {data.files.map((file, index) => (

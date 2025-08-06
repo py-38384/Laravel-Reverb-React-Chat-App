@@ -22,8 +22,6 @@ class ChatController extends Controller
             return redirect()->route('messages');
         }
         $messages = $this->chatServices->getAllMessage($conversation);
-        // dd($messages);
-        // $unReadMessages = $this->chatServices->getUnreadMessage($user); 
         return Inertia::render('chat',['conversation' => $conversation, 'messages' => $messages, 'unReadMessages' => []]);
     }
     public function store(ChatRequest $request){
