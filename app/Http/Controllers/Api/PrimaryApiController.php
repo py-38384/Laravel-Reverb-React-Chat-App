@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\MessageSeen;
 use App\Models\Message;
 use App\Models\Friendship;
 use App\Models\User;
@@ -39,12 +40,13 @@ class PrimaryApiController extends Controller
         if(!$request->unread_message_ids){
             abort(404);
         }
-        logger($request->all());
         try {
             $unReadMessages = Message::whereIn('id',$request->unread_message_ids)->get();
+            $conversation = $unReadMessages[0]->conversation;
             foreach($unReadMessages as $unReadMessage){
                 $unReadMessage->message_seen()->attach(auth()->user());
             }
+            broadcast(new MessageSeen($conversation, $unReadMessages));
             return [
                 "status" => "success",
                 "message" => "Messages Successfully Seen"

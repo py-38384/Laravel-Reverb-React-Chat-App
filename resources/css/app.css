@@ -241,8 +241,9 @@
         object-fit: cover;
     }
 
-    .recipient-dp img {
+    .recipient-dp > * {
         width: 25px;
+        height: 25px;
         border-radius: 50%;
         object-fit: cover;
     }
@@ -470,7 +471,7 @@
         .dp-container img {
             width: 30px;
         }
-        .recipient-dp img {
+        .recipient-dp > * {
             width: 20px;
         }
         .chat-container .chat .message {
@@ -486,7 +487,7 @@
         .dp-container img {
             width: 30px;
         }
-        .recipient-dp img {
+        .recipient-dp > * {
             width: 20px;
         }
         .chat-container .chat .message {

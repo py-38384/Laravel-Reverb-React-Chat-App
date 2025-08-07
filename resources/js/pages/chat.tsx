@@ -38,13 +38,18 @@ export default function Chat({
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState(messages);
     const markMessageAsSeen = async (updatedMessage: Message[][]) => {
-        console.log(`previousMessages from markMessageAsSeen function`)
-        console.log(updatedMessage)
         if (document.hidden) {
             return;
         }
         const unSeenMessageIds: (string | number)[] = [];
-        const latestSenderMessageGroup = [...updatedMessage].reverse().filter((messageGroup) => messageGroup[0].sender_id !== currentUser.id)?.[0];
+        let latestSenderMessageGroupIndex = 0; 
+        let latestSenderMessageGroup: Message[] = []
+        updatedMessage.forEach((messageGroup, index) => {
+            if(messageGroup[0].sender_id !== currentUser.id){
+                latestSenderMessageGroup = messageGroup
+                latestSenderMessageGroupIndex = index
+            }
+        })
         latestSenderMessageGroup.forEach((message) => {
             let currentUserNotExist = true;
             message.message_seen.forEach((user) => {
@@ -68,19 +73,8 @@ export default function Chat({
             if (res.status === 200) {
                 const resData = await res.json();
                 if (resData.status === 'success') {
-                    setCurrentMessages(previousMessages => {
-                        console.log(`previousMessages from markMessageAsSeen function setCurrentMessages`)
-                        console.log(previousMessages)
-                        const updatedArray = new Array(previousMessages.length)
-    
-                        for(let i = previousMessages.length - 1; i >= 0; i--){
-                            if(previousMessages[i][0].sender_id !== currentUser.id){
-                                updatedArray[i] = previousMessages[i].map(message => ({...message, message_seen: [...message.message_seen, currentUser]}))
-                            }
-                            updatedArray[i] = previousMessages[i]
-                        }
-                        return updatedArray;
-                    });
+                    setCurrentMessages(previousMessages => previousMessages.map((messagegroup, index) => index === latestSenderMessageGroupIndex? messagegroup.map(message => ({...message, message_seen: [...message.message_seen, currentUser]})): messagegroup
+                    ))
                 }
             }
         }
@@ -167,7 +161,11 @@ export default function Chat({
             }
         });
     };
+    const handleMessageSeen = (e: any) => {
+        console.log(e)
+    }
     useEcho(`conversation.${conversation.id}`, `SendMessage`, handleMessageReceive);
+    useEcho(`conversation.${conversation.id}`, `MessageSeen`, handleMessageSeen);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Chat" />
@@ -209,7 +207,7 @@ export default function Chat({
                         </span>
                     </div>
                 </div>
-                <ChatContainer user={otherUser} messages={currentMessages} />
+                <ChatContainer conversation={conversation} currentUser={currentUser} messages={currentMessages} />
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">
                         {data.files.map((file, index) => (
