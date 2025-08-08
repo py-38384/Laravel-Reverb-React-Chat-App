@@ -1,7 +1,7 @@
 import { getOtherUserFromPrivateChat } from '@/helper';
 import { useInitials } from '@/hooks/use-initials';
 import { Conversations, Message, User } from '@/types/model';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SpinnerCircular } from 'spinners-react';
 import MessageLeft from './message-left';
 import MessageRight from './message-right';
@@ -35,11 +35,52 @@ const ChatContainer = ({ conversation, currentUser, messages }: { conversation: 
                 : -1,
         );
     }, [allSendingMessageGroup]);
+
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    let scrollTimeout = useRef(null);
+    let lastCall = 0
+    const [messageLoadIndex, setMessageLoadIndex] = useState(1)
+    const fetchOlderMessages = () => {
+        // Start From Here
+    }
+    useEffect(() => {
+        const el = containerRef.current;
+        let debouncer: ReturnType<typeof setTimeout>;
+        const handleMessageContainerScroll = (e: Event) => {
+            const target = e.target as HTMLDivElement;
+
+            if (target.scrollTop < 10) {
+                const now = Date.now();
+
+                if (now - lastCall > 1000) {
+                    // Call immediately
+                    
+                    
+
+                    lastCall = now;
+
+                    // Start cooldown
+                    if (debouncer) clearTimeout(debouncer);
+                    debouncer = setTimeout(() => {
+                        lastCall = 0; // reset so next scroll can trigger instantly
+                    }, 1000);
+                }
+            }
+        };
+        if (el) {
+            el.addEventListener('scroll', handleMessageContainerScroll);
+        }
+        return () => {
+            el?.removeEventListener('scroll', handleMessageContainerScroll);
+        };
+    }, []);
     return (
-        <div className='relative'>
-            {loading && <div className=" absolute flex h-full w-full items-center justify-center bg-white z-10">
-                <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />
-            </div>}
+        <div className="relative">
+            {loading && (
+                <div className="absolute z-10 flex h-full w-full items-center justify-center bg-white">
+                    <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />
+                </div>
+            )}
             <div className="chat-container p-4" ref={containerRef}>
                 {messages.map((messageGroup, groupIndex) => (
                     <div key={groupIndex} className={`chat ${messageGroup[0].sender_id === currentUser.id ? 'chat-right' : 'chat-left'}`}>
