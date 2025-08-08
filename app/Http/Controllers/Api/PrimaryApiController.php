@@ -40,23 +40,23 @@ class PrimaryApiController extends Controller
         if(!$request->unread_message_ids){
             abort(404);
         }
-        try {
-            $unReadMessages = Message::whereIn('id',$request->unread_message_ids)->get();
-            $conversation = $unReadMessages[0]->conversation;
-            foreach($unReadMessages as $unReadMessage){
+        $unReadMessages = Message::with('message_seen')->whereIn('id',$request->unread_message_ids)->get();
+        $conversation = $unReadMessages[0]->conversation;
+        $isUpdatedMessageSeen = false;
+        foreach($unReadMessages as $unReadMessage){
+            if(!$unReadMessage->message_seen->contains('id',auth()->id())){
                 $unReadMessage->message_seen()->attach(auth()->user());
+                $isUpdatedMessageSeen = true;
             }
-            broadcast(new MessageSeen($conversation, $unReadMessages));
-            return [
-                "status" => "success",
-                "message" => "Messages Successfully Seen"
-            ];
-        } catch (\Throwable $th) {
-            return response()->json([
-                "status" => "error",
-                "Message" => $th->getMessage()
-            ])->setStatusCode(404);
         }
+        if($isUpdatedMessageSeen){
+            $unReadMessages = Message::with('message_seen')->whereIn('id',$request->unread_message_ids)->get();
+            broadcast(new MessageSeen($conversation, $unReadMessages))->toOthers();
+        }
+        return [
+            "status" => "success",
+            "message" => "Messages Successfully Seen"
+        ];
     }
     public function user_search(Request $request){
         $request->validate([

@@ -26,19 +26,13 @@ const MessageRight = ({
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
     const showDP = () => {
-        if(messageGroup?.[index+1]){
-            const nextMessage = messageGroup[index+1]
-            const allSeenUsers = nextMessage.message_seen
-            for(let i = 0; i < allSeenUsers.length; i++){
-                if(currentUser.id === allSeenUsers[i].id){
-                    return 0;
-                }
+        const seenUser = message.message_seen
+        for(let i = 0;i < seenUser.length; i++){
+            if(seenUser[i].id == otherUser.id && index == (messageGroup.length-1)){
+                return 1;
             }
-            return 1
-        } 
-        if(groupIndex === (messages.length-1)){
-            
         }
+        return 0;
     }
     return (
         <>
@@ -55,7 +49,7 @@ const MessageRight = ({
                     {otherUser.image ? (
                         <img src={`/${otherUser.image}`} style={{ opacity: showDP() }} alt="" />
                     ) : (
-                        <div className="p flex items-center justify-center rounded-full bg-gray-200 text-[10px]">{getInitials(otherUser.name)}</div>
+                        <div className="p flex items-center justify-center rounded-full bg-gray-200 text-[10px]" style={{ opacity: showDP() }}>{getInitials(otherUser.name)}</div>
                     )}
                 </span>
             </div>

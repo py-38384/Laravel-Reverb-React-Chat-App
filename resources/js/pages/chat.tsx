@@ -37,19 +37,19 @@ export default function Chat({
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState(messages);
-    const markMessageAsSeen = async (updatedMessage: Message[][]) => {
+    const markMessageAsSeen = async (AllMessageGroups: Message[][]) => {
         if (document.hidden) {
             return;
         }
-        const unSeenMessageIds: (string | number)[] = [];
-        let latestSenderMessageGroupIndex = 0; 
-        let latestSenderMessageGroup: Message[] = []
-        updatedMessage.forEach((messageGroup, index) => {
-            if(messageGroup[0].sender_id !== currentUser.id){
-                latestSenderMessageGroup = messageGroup
-                latestSenderMessageGroupIndex = index
+        const unSeenMessageIds: number[] = [];
+        let latestSenderMessageGroupIndex = 0;
+        let latestSenderMessageGroup: Message[] = [];
+        AllMessageGroups.forEach((messageGroup, index) => {
+            if (messageGroup[0].sender_id !== currentUser.id) {
+                latestSenderMessageGroup = messageGroup;
+                latestSenderMessageGroupIndex = index;
             }
-        })
+        });
         latestSenderMessageGroup.forEach((message) => {
             let currentUserNotExist = true;
             message.message_seen.forEach((user) => {
@@ -57,7 +57,7 @@ export default function Chat({
             });
             if (currentUserNotExist) unSeenMessageIds.push(message.id);
         });
-        if(unSeenMessageIds.length > 0){
+        if (unSeenMessageIds.length > 0) {
             const bearerToken = localStorage.getItem('bearerToken');
             const res = await fetch('/api/update-message-read-status', {
                 method: 'POST',
@@ -73,17 +73,26 @@ export default function Chat({
             if (res.status === 200) {
                 const resData = await res.json();
                 if (resData.status === 'success') {
-                    setCurrentMessages(previousMessages => previousMessages.map((messagegroup, index) => index === latestSenderMessageGroupIndex? messagegroup.map(message => ({...message, message_seen: [...message.message_seen, currentUser]})): messagegroup
-                    ))
+                    // nothing to do here
                 }
             }
         }
     };
     useEffect(() => {
-        markMessageAsSeen(currentMessages?currentMessages:messages);
-        document.addEventListener('visibilitychange', () => markMessageAsSeen(currentMessages?currentMessages:messages));
+        markMessageAsSeen(messages);
+        document.addEventListener('visibilitychange', () =>
+            setCurrentMessages((prev) => {
+                markMessageAsSeen(prev);
+                return prev;
+            }),
+        );
         return () => {
-            document.removeEventListener('visibilitychange', () => markMessageAsSeen(currentMessages?currentMessages:messages));
+            document.removeEventListener('visibilitychange', () =>
+                setCurrentMessages((prev) => {
+                    markMessageAsSeen(prev);
+                    return prev;
+                }),
+            );
         };
     }, []);
     const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
@@ -150,20 +159,37 @@ export default function Chat({
                 const lastGroup = prevCurrentMessages[prevCurrentMessages.length - 1];
                 if (!lastGroup.some((msg) => msg.id === messageObj.id)) {
                     const updatedMessages = [...prevCurrentMessages.slice(0, -1), [...lastGroup, messageObj as Message]];
-                    markMessageAsSeen(updatedMessages)
                     return updatedMessages;
                 }
-                markMessageAsSeen(prevCurrentMessages)
                 return prevCurrentMessages;
             } else {
-                markMessageAsSeen(prevCurrentMessages)
-                return [...prevCurrentMessages, [messageObj as Message]];
+                const updatedPrevCurrentMessages = [...prevCurrentMessages, [messageObj as Message]];
+                return updatedPrevCurrentMessages;
             }
         });
+        setTimeout(() => {
+            setCurrentMessages((preMessages) => {
+                markMessageAsSeen(preMessages);
+                return preMessages;
+            });
+        }, 500);
     };
     const handleMessageSeen = (e: any) => {
-        console.log(e)
-    }
+        const conversation = e.conversation
+        const messages: Message[] = e.messages
+        const messagesIds = messages.map(message => message.id) 
+        const user = e.user
+        setCurrentMessages(prevMessage => 
+            prevMessage.map(
+            messageGroup => messageGroup.map(
+                message => 
+                    messagesIds.includes(message.id)? 
+                    {...message, message_seen: [...message.message_seen, user]}
+                    : message 
+                )
+            )
+        )
+    };
     useEcho(`conversation.${conversation.id}`, `SendMessage`, handleMessageReceive);
     useEcho(`conversation.${conversation.id}`, `MessageSeen`, handleMessageSeen);
     return (
