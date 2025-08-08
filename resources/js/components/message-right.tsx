@@ -1,39 +1,37 @@
-import { getOtherUserFromPrivateChat } from "@/helper";
-import useCurrentUser from "@/hooks/use-current-user";
-import { useInitials } from "@/hooks/use-initials";
-import { Conversations, Image, Message } from "@/types/model";
+import { getOtherUserFromPrivateChat } from '@/helper';
+import useCurrentUser from '@/hooks/use-current-user';
+import { useInitials } from '@/hooks/use-initials';
+import { Conversations, Image, Message } from '@/types/model';
+import { useEffect, useState } from 'react';
 
 const MessageRight = ({
-    
-    conversation, 
-    message, 
+    conversation,
+    message,
     messages,
     messageGroup,
+    allSendingMessageGroup,
+    lastMessageSeenId,
     groupIndex,
-    index
-    
-    } : {
-        
-    conversation: Conversations, 
-    message: Message, 
-    messageGroup: Message[],
-    messages: Message[][],
-    groupIndex: number,
+    index,
+}: {
+    conversation: Conversations
+    message: Message
+    messageGroup: Message[]
+    allSendingMessageGroup: Message[][]
+    lastMessageSeenId: number
+    messages: Message[][]
+    groupIndex: number
     index: number
-
-    }) => {
+}) => {
     const otherUser = getOtherUserFromPrivateChat(conversation);
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
-    const showDP = () => {
-        const seenUser = message.message_seen
-        for(let i = 0;i < seenUser.length; i++){
-            if(seenUser[i].id == otherUser.id && index == (messageGroup.length-1)){
-                return 1;
-            }
-        }
-        return 0;
-    }
+    const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
+
+    useEffect(() => {
+        let latestSeenId = null;
+    }, [allSendingMessageGroup, otherUser.id]);
+    const showDP = () => lastMessageSeenId? (message.id === lastMessageSeenId? 1: 0): 0;
     return (
         <>
             <div key={message.id} className="message-box">
@@ -49,7 +47,9 @@ const MessageRight = ({
                     {otherUser.image ? (
                         <img src={`/${otherUser.image}`} style={{ opacity: showDP() }} alt="" />
                     ) : (
-                        <div className="p flex items-center justify-center rounded-full bg-gray-200 text-[10px]" style={{ opacity: showDP() }}>{getInitials(otherUser.name)}</div>
+                        <div className="p flex items-center justify-center rounded-full bg-gray-200 text-[10px]" style={{ opacity: showDP() }}>
+                            {getInitials(otherUser.name)}
+                        </div>
                     )}
                 </span>
             </div>

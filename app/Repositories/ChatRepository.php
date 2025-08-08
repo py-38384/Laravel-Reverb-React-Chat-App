@@ -21,7 +21,8 @@ class ChatRepository implements ChatRepositoryInterface
     }
     public function all($conversation = null){
         if($conversation){
-            $messages = Message::with('message_seen')->where('conversation_id', $conversation->id)->with('images:id,message_id')->orderBy('created_at')->get();
+            $messages = Message::with('message_seen')->where('conversation_id', $conversation->id)->with('images:id,message_id')->orderBy('created_at','desc')->paginate(10)->reverse();
+            // dd($messages);
         } else {
             $messages = Message::orderBy('created_at')->get();
         }

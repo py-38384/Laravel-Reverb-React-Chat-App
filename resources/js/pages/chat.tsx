@@ -11,6 +11,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import { ArrowLeft, ImageIcon, SendHorizonal, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { SpinnerCircular } from 'spinners-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -23,12 +24,14 @@ export default function Chat({
     conversation,
     messages,
     unReadMessages,
-}: {
-    conversation: Conversations;
-    messages: Message[][];
-    unReadMessages: Message[];
-}) {
+    }: {
+        conversation: Conversations;
+        messages: Message[][];
+        unReadMessages: Message[];
+    }) {
     const otherUser = getOtherUserFromPrivateChat(conversation);
+    const DefaultPageTitle = `Chat With ${otherUser.name}`;
+
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
         files: [],
@@ -37,6 +40,8 @@ export default function Chat({
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState(messages);
+    const [pageTitle, setPageTitle] = useState(DefaultPageTitle);
+    const [unSeenMessageCount, setUnSeenMessageCount] = useState(0);
     const markMessageAsSeen = async (AllMessageGroups: Message[][]) => {
         if (document.hidden) {
             return;
@@ -78,21 +83,19 @@ export default function Chat({
             }
         }
     };
+    const handleVisibilitychange = () => {
+        setPageTitle(DefaultPageTitle);
+        setUnSeenMessageCount(0);
+        setCurrentMessages((prev) => {
+            markMessageAsSeen(prev);
+            return prev;
+        });
+    }
     useEffect(() => {
         markMessageAsSeen(messages);
-        document.addEventListener('visibilitychange', () =>
-            setCurrentMessages((prev) => {
-                markMessageAsSeen(prev);
-                return prev;
-            }),
-        );
+        document.addEventListener('visibilitychange', handleVisibilitychange);
         return () => {
-            document.removeEventListener('visibilitychange', () =>
-                setCurrentMessages((prev) => {
-                    markMessageAsSeen(prev);
-                    return prev;
-                }),
-            );
+            document.removeEventListener('visibilitychange', handleVisibilitychange);
         };
     }, []);
     const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
@@ -173,28 +176,38 @@ export default function Chat({
                 return preMessages;
             });
         }, 500);
+        if (document.hidden) {
+            setUnSeenMessageCount((prevUnSeenMessageCount) => {
+                const newUnSeenMessageCount = prevUnSeenMessageCount + 1;
+                const titleText =
+                    conversation.type === 'private'
+                        ? `(${newUnSeenMessageCount}) New Message From ${otherUser.name}`
+                        : `(${newUnSeenMessageCount}) New Message`;
+                setPageTitle(titleText);
+                return newUnSeenMessageCount;
+            });
+        }
     };
     const handleMessageSeen = (e: any) => {
-        const conversation = e.conversation
-        const messages: Message[] = e.messages
-        const messagesIds = messages.map(message => message.id) 
-        const user = e.user
-        setCurrentMessages(prevMessage => 
-            prevMessage.map(
-            messageGroup => messageGroup.map(
-                message => 
-                    messagesIds.includes(message.id)? 
-                    {...message, message_seen: [...message.message_seen, user]}
-                    : message 
-                )
-            )
-        )
+        const conversation = e.conversation;
+        const messages: Message[] = e.messages;
+        const messagesIds = messages.map((message) => message.id);
+        const user = e.user;
+        setCurrentMessages((prevMessage) =>
+            prevMessage.map((messageGroup) =>
+                messageGroup.map((message) =>
+                    messagesIds.includes(message.id) ? { ...message, message_seen: [...message.message_seen, user] } : message,
+                ),
+            ),
+        );
     };
     useEcho(`conversation.${conversation.id}`, `SendMessage`, handleMessageReceive);
     useEcho(`conversation.${conversation.id}`, `MessageSeen`, handleMessageSeen);
+
+    const [chatContainerRender, setChatContainerRender] = useState(1)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Chat" />
+            <Head title={pageTitle} />
             <div>
                 <div className="chat-header border-b">
                     <div className="chat-header-left">
@@ -233,7 +246,7 @@ export default function Chat({
                         </span>
                     </div>
                 </div>
-                <ChatContainer conversation={conversation} currentUser={currentUser} messages={currentMessages} />
+                <ChatContainer conversation={conversation} currentUser={currentUser} messages={currentMessages}/>
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">
                         {data.files.map((file, index) => (
