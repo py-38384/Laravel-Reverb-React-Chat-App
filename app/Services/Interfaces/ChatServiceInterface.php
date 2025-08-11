@@ -6,8 +6,8 @@ use App\Models\Message;
 
 interface ChatServiceInterface
 {
-    public function create($data): Message;
-    public function getAllMessage();
-    public function getUnreadMessage();
+    public function create($data);
+    public function getMessage($conversation, $offsetAmount);
+    public function getUnreadMessage($user);
     
 }

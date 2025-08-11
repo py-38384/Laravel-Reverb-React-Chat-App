@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\MessageSeen;
+use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Friendship;
 use App\Models\User;
+use App\Repositories\ChatRepository;
+use App\Services\ChatServices;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +17,10 @@ use Laravel\Pail\ValueObjects\Origin\Console;
 
 class PrimaryApiController extends Controller
 {
+    private $chatServices;
+    public function __construct(ChatServices $chatServices){
+        $this->chatServices = $chatServices;
+    }
     public function check(){
         return response()->json([
             "status" => "success",
@@ -143,5 +150,15 @@ class PrimaryApiController extends Controller
             'status' => 'failed',
             'message' => 'Friend request does not exist',
         ];
+    }
+    public function messages(Request $request){
+        $conversationId = $request->conversationId;
+        $conversation = Conversation::with("users")->find($conversationId);
+        if(!$conversation->users->contains("id", auth()->id())){
+            abort(404);
+        }
+        $offsetAmount = $request->offsetAmount;
+        $messages = $this->chatServices->getMessage($conversation, $offsetAmount);
+        return  ["status" => "success", "message" => "Message Sucessfully Fetched", "data" => $messages];
     }
 }

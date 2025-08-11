@@ -29,6 +29,7 @@ export default function Chat({
         messages: Message[][];
         unReadMessages: Message[];
     }) {
+        console.log(messages);
     const otherUser = getOtherUserFromPrivateChat(conversation);
     const DefaultPageTitle = `Chat With ${otherUser.name}`;
 
@@ -39,8 +40,9 @@ export default function Chat({
     });
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
-    const [currentMessages, setCurrentMessages] = useState(messages);
+    const [currentMessages, setCurrentMessages] = useState<Message[][]>(messages);
     const [pageTitle, setPageTitle] = useState(DefaultPageTitle);
+    const [offset, setOffset] = useState<number>(1);
     const [unSeenMessageCount, setUnSeenMessageCount] = useState(0);
     const markMessageAsSeen = async (AllMessageGroups: Message[][]) => {
         if (document.hidden) {
@@ -246,7 +248,7 @@ export default function Chat({
                         </span>
                     </div>
                 </div>
-                <ChatContainer conversation={conversation} currentUser={currentUser} messages={currentMessages}/>
+                <ChatContainer conversation={conversation} currentUser={currentUser} messages={currentMessages} setMessages={setCurrentMessages} offset={offset} setOffset={setOffset}/>
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">
                         {data.files.map((file, index) => (

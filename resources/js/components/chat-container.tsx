@@ -1,12 +1,29 @@
 import { getOtherUserFromPrivateChat } from '@/helper';
 import { useInitials } from '@/hooks/use-initials';
 import { Conversations, Message, User } from '@/types/model';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SpinnerCircular } from 'spinners-react';
 import MessageLeft from './message-left';
 import MessageRight from './message-right';
 
-const ChatContainer = ({ conversation, currentUser, messages }: { conversation: Conversations; currentUser: User; messages: Message[][] }) => {
+const ChatContainer = (
+        { 
+            conversation, 
+            currentUser, 
+            messages, 
+            setMessages,
+            offset,
+            setOffset,
+        }: 
+        { 
+            conversation: Conversations; 
+            currentUser: User; 
+            messages: Message[][], 
+            setMessages: React.Dispatch<React.SetStateAction<Message[][]>> 
+            offset: number,
+            setOffset: React.Dispatch<React.SetStateAction<number>>
+        }
+    ) => {
     const bottomRef = useRef<HTMLDivElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(true);
@@ -40,8 +57,31 @@ const ChatContainer = ({ conversation, currentUser, messages }: { conversation: 
     let scrollTimeout = useRef(null);
     let lastCall = 0
     const [messageLoadIndex, setMessageLoadIndex] = useState(1)
-    const fetchOlderMessages = () => {
-        // Start From Here
+    const fetchOlderMessages = async () => {
+        const bearerToken = localStorage.getItem('bearerToken');
+        const res = await fetch(route('fetch.messages'), {
+            method: 'POST',
+            headers: {
+                accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${bearerToken}`,
+            },
+            body: JSON.stringify({
+                offset: offset,
+                conversationId: conversation.id,
+            }),
+        });
+        if (res.status === 200) {
+            const resData = await res.json();
+            if (resData.status === 'success') {
+                setOffset(prevOffset => {
+                    const newValue = prevOffset + 1;
+                    console.log("Updating offset to:", newValue);
+                    console.log(offset);
+                    return newValue;
+                });
+            }
+        }
     }
     useEffect(() => {
         const el = containerRef.current;
@@ -49,12 +89,12 @@ const ChatContainer = ({ conversation, currentUser, messages }: { conversation: 
         const handleMessageContainerScroll = (e: Event) => {
             const target = e.target as HTMLDivElement;
 
-            if (target.scrollTop < 10) {
+            if (target.scrollTop < 1) {
                 const now = Date.now();
 
                 if (now - lastCall > 1000) {
                     // Call immediately
-                    
+                    fetchOlderMessages()
                     
 
                     lastCall = now;

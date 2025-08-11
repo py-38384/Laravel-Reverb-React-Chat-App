@@ -19,10 +19,9 @@ class ChatRepository implements ChatRepositoryInterface
         $newMessage->created_at_human = $newMessage->created_at->diffForHumans();
         return $newMessage;
     }
-    public function all($conversation = null){
+    public function get($conversation = null, $offsetAmount = 0){
         if($conversation){
-            $messages = Message::with('message_seen')->where('conversation_id', $conversation->id)->with('images:id,message_id')->orderBy('created_at','desc')->paginate(10)->reverse();
-            // dd($messages);
+            $messages = Message::with('message_seen')->where('conversation_id', $conversation->id)->with('images:id,message_id')->orderBy('created_at','desc')->offset($offsetAmount*config('constant.messageLimitPerPage'))->limit(config('constant.messageLimitPerPage'))->get()->reverse();
         } else {
             $messages = Message::orderBy('created_at')->get();
         }

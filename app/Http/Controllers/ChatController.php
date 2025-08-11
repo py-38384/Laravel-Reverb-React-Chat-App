@@ -21,7 +21,7 @@ class ChatController extends Controller
         if(!$conversation){
             return redirect()->route('messages');
         }
-        $messages = $this->chatServices->getAllMessage($conversation);
+        $messages = $this->chatServices->getMessage($conversation);
         return Inertia::render('chat',['conversation' => $conversation, 'messages' => $messages, 'unReadMessages' => []]);
     }
     public function store(ChatRequest $request){

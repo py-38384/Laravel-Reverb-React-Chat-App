@@ -5,11 +5,12 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Image;
 use App\Models\Conversation;
+use App\Services\Interfaces\ChatServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\ChatRepository;
 
-class ChatServices
+class ChatServices implements ChatServiceInterface
 {
     private $chatRepository;
     public function __construct(ChatRepository $chatRepository)
@@ -44,11 +45,11 @@ class ChatServices
         }
 
     }
-    public function getAllMessage($conversation){
+    public function getMessage($conversation, $offsetAmount = 0){
         $groupedMessages = [];
         $currentGroup = [];
         $previousSender = null;
-        $allMessages =  $this->chatRepository->all($conversation);
+        $allMessages =  $this->chatRepository->get($conversation, $offsetAmount);
         foreach($allMessages as $messages){
             if($previousSender != $messages->sender_id){
                 if(!empty($currentGroup)){
