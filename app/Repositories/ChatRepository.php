@@ -21,7 +21,14 @@ class ChatRepository implements ChatRepositoryInterface
     }
     public function get($conversation = null, $offsetAmount = 0){
         if($conversation){
-            $messages = Message::with('message_seen')->where('conversation_id', $conversation->id)->with('images:id,message_id')->orderBy('created_at','desc')->offset($offsetAmount*config('constant.messageLimitPerPage'))->limit(config('constant.messageLimitPerPage'))->get()->reverse();
+            $messages = Message::with('message_seen')
+                        ->where('conversation_id', $conversation->id)
+                        ->with('images:id,message_id')
+                        ->orderBy('created_at','desc')
+                        ->offset($offsetAmount*config('constant.messageLimitPerPage'))
+                        ->limit(config('constant.messageLimitPerPage'))
+                        ->get()
+                        ->reverse();
         } else {
             $messages = Message::orderBy('created_at')->get();
         }

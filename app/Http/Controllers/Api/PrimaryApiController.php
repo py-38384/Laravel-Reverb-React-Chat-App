@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\MessageSeen;
-use App\Models\Conversation;
+use App\Models\User;
 use App\Models\Message;
 use App\Models\Friendship;
-use App\Models\User;
-use App\Repositories\ChatRepository;
-use App\Services\ChatServices;
+use App\Events\MessageSeen;
+use App\Models\Conversation;
 use Illuminate\Http\Request;
+use App\Services\ChatServices;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Repositories\ChatRepository;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\ApiAuthRequest;
 use Laravel\Pail\ValueObjects\Origin\Console;
@@ -152,13 +153,16 @@ class PrimaryApiController extends Controller
         ];
     }
     public function messages(Request $request){
-        logger($request->all());
         $conversationId = $request->conversationId;
         $conversation = Conversation::with("users")->find($conversationId);
         if(!$conversation->users->contains("id", auth()->id())){
             abort(404);
         }
         $offsetAmount = $request->offsetAmount;
+        $messageCount = Message::where('conversation_id', $conversation->id)->count();
+        if(($offsetAmount * config('constant.messageLimitPerPage')) > $messageCount){
+            return  ["status" => "faild", "message" => "No More Message Found"];
+        }
         $messages = $this->chatServices->getMessage($conversation, $offsetAmount);
         return  ["status" => "success", "message" => "Message Sucessfully Fetched", "data" => $messages];
     }

@@ -13,18 +13,22 @@ const ChatContainer = (
             messages, 
             setMessages,
             fetchOlderMessages,
+            setScrollToBottom,
         }: 
         { 
             conversation: Conversations; 
             currentUser: User; 
             messages: Message[][], 
             setMessages: React.Dispatch<React.SetStateAction<Message[][]>> 
-            fetchOlderMessages: () => void
+            fetchOlderMessages: () => void,
+            setScrollToBottom: React.Dispatch<React.SetStateAction<boolean>>
         }
     ) => {
     const bottomRef = useRef<HTMLDivElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(true);
+    const [messageLoading, setMessageLoading] = useState(false);
+    const oldScrollHeightRef = useRef(0);
     const [allSendingMessageGroup, setAllSendingMessageGroup] = useState(
         messages.filter((messageGroup) => messageGroup[0].sender_id == currentUser.id),
     );
@@ -32,8 +36,23 @@ const ChatContainer = (
     useEffect(() => {
         const timeout = setTimeout(() => {
             setLoading(false);
-            bottomRef.current?.scrollIntoView();
+            setScrollToBottom(prev => {
+                if(prev){
+                    bottomRef.current?.scrollIntoView();
+                } else {
+                    
+                }
+                return true
+            })
         }, 500);
+        const container = containerRef.current;
+        if(container){
+            const newScrollHeight = container.scrollHeight;
+            const diff = newScrollHeight - oldScrollHeightRef.current;
+            if (diff > 0) {
+                container.scrollTop = container.scrollTop + diff;
+            }
+        }
         setAllSendingMessageGroup(messages.filter((messageGroup) => messageGroup[0].sender_id == currentUser.id));
         return () => clearTimeout(timeout);
     }, [messages]);
@@ -61,12 +80,18 @@ const ChatContainer = (
         const handleMessageContainerScroll = (e: Event) => {
             const target = e.target as HTMLDivElement;
 
-            if (target.scrollTop < 1) {
+            if (target.scrollTop < 100) {
                 const now = Date.now();
 
-                if (now - lastCall > 1000) {
+                if (now - lastCall > 100) {
                     // Call immediately
+                    const container = containerRef.current;
+                    if (container) {
+                        oldScrollHeightRef.current = container.scrollHeight;
+                    }
+                    setMessageLoading(true)
                     fetchOlderMessages()
+                    setMessageLoading(false)
                     
 
                     lastCall = now;
@@ -88,6 +113,11 @@ const ChatContainer = (
     }, []);
     return (
         <div className="relative">
+            {messageLoading && (
+            <div className="absolute top-0 z-10 flex h-[100px] w-full items-center justify-center bg-transparent">
+                <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />
+            </div>
+            )}
             {loading && (
                 <div className="absolute z-10 flex h-full w-full items-center justify-center bg-white">
                     <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />

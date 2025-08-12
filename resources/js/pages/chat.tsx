@@ -28,7 +28,6 @@ export default function Chat({
     messages: Message[][];
     unReadMessages: Message[];
 }) {
-    console.log(messages);
     const otherUser = getOtherUserFromPrivateChat(conversation);
     const DefaultPageTitle = `Chat With ${otherUser.name}`;
 
@@ -41,66 +40,44 @@ export default function Chat({
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState<Message[][]>(messages);
     const [pageTitle, setPageTitle] = useState(DefaultPageTitle);
+    const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
     const [unSeenMessageCount, setUnSeenMessageCount] = useState(0);
-    // const [offset, setOffset] = useState<number>(1);
-    // useEffect(() => {
-    //     console.log(offset);
-    // }, [offset]);
-    
-    // const fetchOlderMessages = () => {
-    //     const bearerToken = localStorage.getItem('bearerToken');
-    //     const payload = {
-    //         offset: offset,
-    //         conversationId: conversation.id,
-    //     }
-    //     fetch(route('fetch.messages'), {
-    //         method: 'POST',
-    //         headers: {
-    //             accept: 'application/json',
-    //             'Content-Type': 'application/json',
-    //             Authorization: `Bearer ${bearerToken}`,
-    //         },
-    //         body: JSON.stringify(payload),
-    //     }).then(res => res.json()).then(data => {
-    //         if (data.status === 'success') {
-    //             setOffset((prevOffset) => {
-    //                 const newValue = prevOffset + 1;
-    //                 return newValue;
-    //             });
-    //         }
-    //     })
-    // };
-      const [messageOffset, setMessageOffset] = useState(1);
-    const fetchOlderMessages = async () => {
-    try {
-      const bearerToken = localStorage.getItem("bearerToken");
-
-      // ✅ Always read offset here — it will be the latest state
-        const res = await fetch(route("fetch.messages"), {
-            method: "POST",
-            headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${bearerToken}`,
-            },
-            body: JSON.stringify({
-            messageOffset, // latest value
-            conversationId: conversation.id,
-            }),
+    const [messageOffset, setMessageOffset] = useState(1);
+    const fetchOlderMessages = () => {
+        setMessageOffset((prev) => {
+            getSetMessage(prev)
+            const newMessageOffset = prev+1
+            return newMessageOffset
         });
+    };
+    const getSetMessage = async (offset: number) => {
+        try {
+            const bearerToken = localStorage.getItem('bearerToken');
+            const res = await fetch(route('fetch.messages'), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${bearerToken}`,
+                },
+                body: JSON.stringify({
+                    offsetAmount: offset,
+                    conversationId: conversation.id,
+                }),
+            });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const resData = await res.json();
+            const resData = await res.json();
 
-        console.log(messageOffset);
-
-        if (resData.status === "success") {
-            // ✅ Increment using functional update to avoid stale values
-            setMessageOffset(prev => prev + 1);
-        }
+            if (resData.status === 'success') {
+                setScrollToBottom(false)
+                setCurrentMessages(prev => [...resData.data, ...prev])
+                
+            }
         } catch (err) {
-        console.error("Failed to fetch older messages:", err);
+            console.error('Failed to fetch older messages:', err);
+            return false
         } finally {
 
         }
@@ -316,6 +293,7 @@ export default function Chat({
                     messages={currentMessages}
                     setMessages={setCurrentMessages}
                     fetchOlderMessages={fetchOlderMessages}
+                    setScrollToBottom={setScrollToBottom}
                 />
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">
