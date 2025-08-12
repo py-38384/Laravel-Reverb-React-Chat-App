@@ -152,6 +152,7 @@ class PrimaryApiController extends Controller
         ];
     }
     public function messages(Request $request){
+        logger($request->all());
         $conversationId = $request->conversationId;
         $conversation = Conversation::with("users")->find($conversationId);
         if(!$conversation->users->contains("id", auth()->id())){

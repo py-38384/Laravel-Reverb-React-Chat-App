@@ -12,16 +12,14 @@ const ChatContainer = (
             currentUser, 
             messages, 
             setMessages,
-            offset,
-            setOffset,
+            fetchOlderMessages,
         }: 
         { 
             conversation: Conversations; 
             currentUser: User; 
             messages: Message[][], 
             setMessages: React.Dispatch<React.SetStateAction<Message[][]>> 
-            offset: number,
-            setOffset: React.Dispatch<React.SetStateAction<number>>
+            fetchOlderMessages: () => void
         }
     ) => {
     const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -57,32 +55,6 @@ const ChatContainer = (
     let scrollTimeout = useRef(null);
     let lastCall = 0
     const [messageLoadIndex, setMessageLoadIndex] = useState(1)
-    const fetchOlderMessages = async () => {
-        const bearerToken = localStorage.getItem('bearerToken');
-        const res = await fetch(route('fetch.messages'), {
-            method: 'POST',
-            headers: {
-                accept: 'application/json',
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${bearerToken}`,
-            },
-            body: JSON.stringify({
-                offset: offset,
-                conversationId: conversation.id,
-            }),
-        });
-        if (res.status === 200) {
-            const resData = await res.json();
-            if (resData.status === 'success') {
-                setOffset(prevOffset => {
-                    const newValue = prevOffset + 1;
-                    console.log("Updating offset to:", newValue);
-                    console.log(offset);
-                    return newValue;
-                });
-            }
-        }
-    }
     useEffect(() => {
         const el = containerRef.current;
         let debouncer: ReturnType<typeof setTimeout>;

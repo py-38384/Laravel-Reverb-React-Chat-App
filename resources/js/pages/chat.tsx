@@ -11,7 +11,6 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import { ArrowLeft, ImageIcon, SendHorizonal, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { SpinnerCircular } from 'spinners-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -24,12 +23,12 @@ export default function Chat({
     conversation,
     messages,
     unReadMessages,
-    }: {
-        conversation: Conversations;
-        messages: Message[][];
-        unReadMessages: Message[];
-    }) {
-        console.log(messages);
+}: {
+    conversation: Conversations;
+    messages: Message[][];
+    unReadMessages: Message[];
+}) {
+    console.log(messages);
     const otherUser = getOtherUserFromPrivateChat(conversation);
     const DefaultPageTitle = `Chat With ${otherUser.name}`;
 
@@ -42,8 +41,71 @@ export default function Chat({
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState<Message[][]>(messages);
     const [pageTitle, setPageTitle] = useState(DefaultPageTitle);
-    const [offset, setOffset] = useState<number>(1);
     const [unSeenMessageCount, setUnSeenMessageCount] = useState(0);
+    // const [offset, setOffset] = useState<number>(1);
+    // useEffect(() => {
+    //     console.log(offset);
+    // }, [offset]);
+    
+    // const fetchOlderMessages = () => {
+    //     const bearerToken = localStorage.getItem('bearerToken');
+    //     const payload = {
+    //         offset: offset,
+    //         conversationId: conversation.id,
+    //     }
+    //     fetch(route('fetch.messages'), {
+    //         method: 'POST',
+    //         headers: {
+    //             accept: 'application/json',
+    //             'Content-Type': 'application/json',
+    //             Authorization: `Bearer ${bearerToken}`,
+    //         },
+    //         body: JSON.stringify(payload),
+    //     }).then(res => res.json()).then(data => {
+    //         if (data.status === 'success') {
+    //             setOffset((prevOffset) => {
+    //                 const newValue = prevOffset + 1;
+    //                 return newValue;
+    //             });
+    //         }
+    //     })
+    // };
+      const [messageOffset, setMessageOffset] = useState(1);
+    const fetchOlderMessages = async () => {
+    try {
+      const bearerToken = localStorage.getItem("bearerToken");
+
+      // ✅ Always read offset here — it will be the latest state
+        const res = await fetch(route("fetch.messages"), {
+            method: "POST",
+            headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${bearerToken}`,
+            },
+            body: JSON.stringify({
+            messageOffset, // latest value
+            conversationId: conversation.id,
+            }),
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const resData = await res.json();
+
+        console.log(messageOffset);
+
+        if (resData.status === "success") {
+            // ✅ Increment using functional update to avoid stale values
+            setMessageOffset(prev => prev + 1);
+        }
+        } catch (err) {
+        console.error("Failed to fetch older messages:", err);
+        } finally {
+
+        }
+    };
+
     const markMessageAsSeen = async (AllMessageGroups: Message[][]) => {
         if (document.hidden) {
             return;
@@ -92,7 +154,7 @@ export default function Chat({
             markMessageAsSeen(prev);
             return prev;
         });
-    }
+    };
     useEffect(() => {
         markMessageAsSeen(messages);
         document.addEventListener('visibilitychange', handleVisibilitychange);
@@ -206,7 +268,7 @@ export default function Chat({
     useEcho(`conversation.${conversation.id}`, `SendMessage`, handleMessageReceive);
     useEcho(`conversation.${conversation.id}`, `MessageSeen`, handleMessageSeen);
 
-    const [chatContainerRender, setChatContainerRender] = useState(1)
+    const [chatContainerRender, setChatContainerRender] = useState(1);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={pageTitle} />
@@ -248,7 +310,13 @@ export default function Chat({
                         </span>
                     </div>
                 </div>
-                <ChatContainer conversation={conversation} currentUser={currentUser} messages={currentMessages} setMessages={setCurrentMessages} offset={offset} setOffset={setOffset}/>
+                <ChatContainer
+                    conversation={conversation}
+                    currentUser={currentUser}
+                    messages={currentMessages}
+                    setMessages={setCurrentMessages}
+                    fetchOlderMessages={fetchOlderMessages}
+                />
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">
                         {data.files.map((file, index) => (
