@@ -16,18 +16,8 @@ class UserController extends Controller
     public function __construct(UserServiceInterface $userService){
         $this->userService = $userService;
     }
-    /**
-     * Summary of index
-     * function: index
-     * Description: Get all the other user and display it to the dashboard. 
-     */
     public function messages() {
-        // $conversations = auth()->user()->conversations()->with(['users','lastMessage'])->select(['conversations.created_at','conversations.id','type','last_message_id'])->get()->map(function($conversation){
-        //     $conversation->lastMessage->created_at_sec = $conversation->lastMessage? round($conversation->lastMessage->created_at->diffInSeconds(now())): '';
-        //     return $conversation;
-        // });
         $conversations = auth()->user()->conversations()->with(['users','lastMessage'])->select(['conversations.created_at','conversations.id','type','last_message_id'])->get();
-        // dd($conversations);
         return Inertia::render("messages",["conversations" => $conversations]);
     }
     public function index() {
@@ -42,6 +32,15 @@ class UserController extends Controller
         $friendIds = auth()->user()->allFriendIds();
         $friends = User::whereIn('id',$friendIds)->select(['id','name','image','email'])->paginate(10);
         return Inertia::render("friends",["users" => $friends]);
+    }
+    public function blocks(){
+        $enemyIds = auth()->user()->allEnemyIds();
+        $enemies = User::whereIn('id',$enemyIds)->select(['id','name','image','email'])->paginate(10);
+        return Inertia::render('blocks',["users" => $enemies]);
+    }
+    public function requests_outgoing(){
+        $requests = auth()->user()->sentFriendships()->where('friendships.status','pending')->select(['users.id','users.name','users.image','users.email','friendships.status','friendships.created_at'])->paginate(10);
+        return Inertia::render("requests_outgoing",["users" => $requests]);
     }
 
 }

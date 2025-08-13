@@ -12,6 +12,8 @@ Route::middleware(['auth:sanctum'])->group(function (){
     Route::post('remove/request', [PrimaryApiController::class, 'remove_requests'])->name('remove.requests');
     Route::post('handle/request', [PrimaryApiController::class, 'handle_request'])->name('handle.requests');
     Route::post('messages', [PrimaryApiController::class, 'messages'])->name('fetch.messages');
+    Route::post('block/request', [PrimaryApiController::class, 'block_request'])->name('block.requests');
+    Route::post('unblock/request', [PrimaryApiController::class, 'unblock_request'])->name('unblock.request');
 });
 Route::post('/token/test', [PrimaryApiController::class, 'test'])->name('test');
 Route::post('/token/get', [PrimaryApiController::class, 'get'])->name('get.token');

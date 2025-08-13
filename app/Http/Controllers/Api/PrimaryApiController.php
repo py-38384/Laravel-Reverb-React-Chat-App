@@ -71,8 +71,18 @@ class PrimaryApiController extends Controller
             "q" => "required",
         ]);
         $searchQuery = $request->q;
-        $users = User::where('name','ilike',"%$searchQuery%")
-                ->orWhere('email', 'ilike', "%$searchQuery%")
+        $authId = auth()->id();
+        $users = User::whereKeyNot($authId) // exclude self
+                ->whereDoesntHave('receivedFriendships', function ($q) use ($authId) {
+                    $q->where('requester_id', $authId);
+                })
+                ->whereDoesntHave('sentFriendships', function ($q) use ($authId) {
+                    $q->where('addressee_id', $authId);
+                })
+                ->where(function ($q) use ($searchQuery) {
+                    $q->where('name', 'ilike', "%$searchQuery%")
+                    ->orWhere('email', 'ilike', "%$searchQuery%");
+                })
                 ->get()->toArray();
         return $users;
     }
@@ -124,11 +134,7 @@ class PrimaryApiController extends Controller
         ]);
         $other_user_id = $request->id;
         $current_user = auth()->user();
-        // dump($other_user_id);
-        // dd($current_user);
         $friendship_exist_from_there_end = Friendship::where('requester_id', $other_user_id)->where('addressee_id', $current_user->id)->where('status', 'pending')->first();
-        // $friendship_exist_from_there_end = Friendship::where('requester_id', $other_user_id)->where('addressee_id', $current_user)->where('status', 'pending')->first();
-        // dd($friendship_exist_from_there_end);
         
         if($friendship_exist_from_there_end){
             if($request->oparation == 'accept'){
@@ -165,5 +171,59 @@ class PrimaryApiController extends Controller
         }
         $messages = $this->chatServices->getMessage($conversation, $offsetAmount);
         return  ["status" => "success", "message" => "Message Sucessfully Fetched", "data" => $messages];
+    }
+    public function block_request(Request $request){
+        $request->validate([
+            'id' => ['required', 'string', 'exists:users,id']
+        ]);
+        $other_user_id = $request->id;
+        $current_user = auth()->user();
+        $blocked_from_my_end = Friendship::where('requester_id', $current_user->id)->where('addressee_id', $other_user_id)->first();
+        $blocked_from_there_end = Friendship::where('requester_id', $other_user_id)->where('addressee_id', $current_user->id)->first();
+
+        if($blocked_from_my_end || $blocked_from_there_end){
+            if($blocked_from_my_end->status == 'blocked' || $blocked_from_there_end == 'blocked'){
+                return [
+                    'status' => 'success',
+                    'message' => 'Already Blocked',
+                ];
+            }
+            if($blocked_from_my_end){
+                $blocked_from_my_end->status = 'blocked';
+                $blocked_from_my_end->save();
+            }
+            if($blocked_from_there_end){
+                $blocked_from_there_end->status = 'blocked';
+                $blocked_from_there_end->save();
+            }
+            return [
+                'status' => 'success',
+                'message' => 'status change to blocked'
+            ];
+        } 
+        $current_user->sentFriendships()->attach($other_user_id, ['status' => 'blocked']);
+        return [
+            'status' => 'success',
+            'message' => 'status change to blocked'
+        ];
+    }
+    public function unblock_request(Request $request){
+        $request->validate([
+            'id' => ['required', 'string', 'exists:users,id']
+        ]);
+        $other_user_id = $request->id;
+        $current_user = auth()->user();
+        $blocked_from_my_end = Friendship::where('requester_id', $current_user->id)->where('addressee_id', $other_user_id)->first();
+        if(!$blocked_from_my_end){
+            return [
+                'status' => 'faild',
+                'message' => 'No Relation Found',
+            ];
+        }
+        $blocked_from_my_end->delete();
+        return [
+            'status' => 'success',
+            'message' => 'You Unblocked The OherUser',
+        ];
     }
 }

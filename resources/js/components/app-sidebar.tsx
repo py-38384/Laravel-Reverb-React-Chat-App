@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, MessageCircle, User, Globe, UserPlus } from 'lucide-react';
+import { BookOpen, Folder, MessageCircle, User, Globe, UserPlus, Ban } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -19,9 +19,19 @@ const mainNavItems: NavItem[] = [
         icon: User,
     },
     {
-        title: 'Requests',
+        title: 'Incoming Requests',
         href: '/requests',
         icon: UserPlus,
+    },
+    {
+        title: 'Outgoing Requests',
+        href: '/outgoing/requests/',
+        icon: UserPlus,
+    },
+    {
+        title: 'Blocks',
+        href: '/blocks',
+        icon: Ban,
     },
     {
         title: 'Global',

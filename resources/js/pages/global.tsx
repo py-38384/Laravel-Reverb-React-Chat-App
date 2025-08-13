@@ -24,6 +24,7 @@ export default function Messages({ users }: { users: PaginateInterface }) {
     const [usersData, setUserData] = useState(users.data);
     const getInitials = useInitials();
     const currentUser = useCurrentUser();
+    console.log(users.data)
     const [backupUserData, setBackupUserData] = useState(users);
     const [searchInputActive, setSearchInputActive] = useState(false);
     const [showPagination, setShowPagination] = useState(true);
@@ -81,7 +82,7 @@ export default function Messages({ users }: { users: PaginateInterface }) {
         });
         const data = await res.json();
         if (data?.status == 'success') {
-            setUserData((preUserData) => preUserData.map((user) => (user.id === id ? { ...user, is_pending: true } : user)));
+            setUserData(preUserData => preUserData.filter(user => user.id !== id));
         }
     };
     const handleCancelFriendRequest = async (id: string) => {
@@ -97,11 +98,28 @@ export default function Messages({ users }: { users: PaginateInterface }) {
             }),
         });
         const data = await res.json();
-        console.log(data);
         if (data?.status == 'success') {
             setUserData((preUserData) => preUserData.map((user) => (user.id === id ? { ...user, is_pending: false } : user)));
         }
     };
+    const handleBlockRequest = async (id: string) => {
+        if(!confirm('Are You Sure You Want To Block This User?')) return 
+        const res = await fetch('/api/block/request', {
+            method: 'POST',
+            headers: {
+                accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${bearerToken}`,
+            },
+            body: JSON.stringify({
+                id: id,
+            }),
+        });
+        const data = await res.json();
+        if (data?.status == 'success') {
+            setUserData((preUserData) => preUserData.filter(user => user.id !== id));
+        }
+    }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
@@ -162,28 +180,14 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                                                 <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">{user.email}</td>
                                                 <td className="relative border border-gray-300 px-4 py-2 dark:border-gray-700">
                                                     <div className="flex">
-                                                        {user.is_pending ? (
-                                                            <button title="Remove Request" onClick={() => handleCancelFriendRequest(user.id)}>
-                                                                <X className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                            </button>
-                                                        ) : user.is_blocked ? null : user.is_accepted ? (
-                                                            <button title="Unfriend" onClick={() => handleFriendRequest(user.id)}>
-                                                                <UserMinus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                            </button>
-                                                        ) : (
-                                                            <button title="Friend Request" onClick={() => handleFriendRequest(user.id)}>
-                                                                <UserPlus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                            </button>
-                                                        )}
-                                                        {user.is_blocked ? (
-                                                            <button title="Unblock">
-                                                                <Undo2 className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                            </button>
-                                                        ) : (
-                                                            <button title="Block">
-                                                                <Ban className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
-                                                            </button>
-                                                        )}
+
+                                                        <button title="Friend Request" onClick={() => handleFriendRequest(user.id)}>
+                                                            <UserPlus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                        </button>
+                                                        <button title="Block">
+                                                            <Ban onClick={() => handleBlockRequest(user.id)} className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                        </button>
+
                                                     </div>
                                                 </td>
                                             </tr>

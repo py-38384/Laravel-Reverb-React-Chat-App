@@ -80,4 +80,17 @@ class User extends Authenticatable
             ->unique()
             ->values();
     }
+    public function allEnemyIds(){
+        $authId = auth()->id();
+        return Friendship::where('status', 'blocked')
+            ->where('requester_id', $authId)
+            ->get()
+            ->map(function ($friendship) use ($authId) {
+                return $friendship->requester_id == $authId
+                    ? $friendship->addressee_id
+                    : $friendship->requester_id;
+            })
+            ->unique()
+            ->values();
+    }
 }
