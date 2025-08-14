@@ -1,17 +1,12 @@
-import Paginate from '@/components/paginate';
-import useCurrentUser from '@/hooks/use-current-user';
 import useDebounce from '@/hooks/use-debounce';
 import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { User } from '@/types/model';
-import { Paginate as PaginateInterface } from '@/types/paginate';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useQuery } from '@tanstack/react-query';
-import { Ban, UserPlus, Search, X, Users, Undo2, UserMinus, Check, MessageSquare } from 'lucide-react';
+import { Undo2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import Spinner from '@/components/spinner';
-import { SpinnerCircular } from 'spinners-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,17 +15,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Blocks({ users }: { users: PaginateInterface }) {
+export default function Blocks({ users }: { users: User[] }) {
     const bearerToken = localStorage.getItem('bearerToken');
-    const [usersData, setUserData] = useState(users.data)
+    const [usersData, setUserData] = useState(users)
     const getInitials = useInitials();
-    const currentUser = useCurrentUser();
-    const [backupUserData, setBackupUserData] = useState(users); 
-    const [searchInputActive, setSearchInputActive] = useState(false);
     const [showPagination, setShowPagination] = useState(true);
     const [searchInput, setSearchInput] = useState('');
     const debouncedSearchInput = useDebounce(searchInput);
-    const startConversation = useForm({user_id: ''})
     const fetchSearchUserData = async (debouncedSearchInput: string) => {
         const res = await fetch('/api/users/search',{
             method: "POST",
@@ -116,7 +107,6 @@ export default function Blocks({ users }: { users: PaginateInterface }) {
                     ))}
                 </tbody>
             </table>
-            {showPagination && <Paginate data={users} />}
             </div>
             ):(
                 <h1 className='w-full flex items-center justify-center h-[30rem] text-center text-3xl font-semibold'>No Friend Found!</h1>

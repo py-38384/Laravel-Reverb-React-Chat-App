@@ -226,4 +226,36 @@ class PrimaryApiController extends Controller
             'message' => 'You Unblocked The OherUser',
         ];
     }
+    public function user_global(Request $request){
+        $request->validate([
+            'offsetAmount' => ['required','numeric']
+        ]);
+        $data = User::whereKeyNot(auth()->id())
+        ->whereDoesntHave('receivedFriendships', function ($q) {
+            $q->where('requester_id', auth()->id());
+        })
+        ->whereDoesntHave('sentFriendships', function ($q) {
+            $q->where('addressee_id', auth()->id());
+        })
+            ->orderBy('created_at')
+            ->offset(config('constant.pagination')*$request->offsetAmount)
+            ->limit(config('constant.pagination'))
+            ->get()
+            ->toArray();
+        return ['status' => 'success','data' => $data];
+    }
+    public function user_friend(Request $request){
+        $request->validate([
+            'offsetAmount' => ['required','numeric']
+        ]);
+        $friendIds = auth()->user()->allFriendIds();
+        $data = User::whereIn('id',$friendIds)
+            ->select(['id','name','image','email'])
+            ->orderBy('created_at')
+            ->offset(config('constant.pagination')*$request->offsetAmount)
+            ->limit(config('constant.pagination'))
+            ->get()
+            ->toArray();
+        return ['status' => 'success','data' => $data];
+    }
 }

@@ -31,7 +31,9 @@ class UserRepository implements UserRepositoryInterface
             ->whereDoesntHave('sentFriendships', function ($q) use ($authId) {
                 $q->where('addressee_id', $authId);
             })
-            ->paginate(10);
+            ->orderBy('created_at')
+            ->limit(config('constant.pagination'))
+            ->get();
     }
     /**
      * Summary of find

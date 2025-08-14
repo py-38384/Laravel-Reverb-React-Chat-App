@@ -20,14 +20,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Request({ users }: { users: PaginateInterface }) {
+export default function Request({ users }: { users: User[] }) {
     const bearerToken = localStorage.getItem('bearerToken');
-    const [usersData, setUserData] = useState(users.data)
+    const [usersData, setUserData] = useState(users)
     const getInitials = useInitials();
     const currentUser = useCurrentUser();
-    const [backupUserData, setBackupUserData] = useState(users); 
-    const [searchInputActive, setSearchInputActive] = useState(false);
-    const [showPagination, setShowPagination] = useState(true);
     const [searchInput, setSearchInput] = useState('');
     const debouncedSearchInput = useDebounce(searchInput);
     const {} = useForm({
@@ -56,20 +53,6 @@ export default function Request({ users }: { users: PaginateInterface }) {
     useEffect(() => {
         isSuccess? setUserData(data): null
     },[data, isSuccess])
-    const clearSearchInput = () => {
-        setSearchInput('')
-        setUserData(backupUserData.data)
-        setShowPagination(true)
-    }
-    const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchInput(e.target.value)
-        if(!e.target.value){
-            setShowPagination(true)
-            setUserData(backupUserData.data)
-        } else {
-            setShowPagination(false)
-        }
-    }
     const handleCancelFriendRequest = async (id: string) => {
         const res = await fetch('/api/remove/request', {
             method: 'POST',
@@ -93,18 +76,12 @@ export default function Request({ users }: { users: PaginateInterface }) {
             {usersData.length > 0?(
             <div className="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
                 <div className="overflow-x-auto">
-                    <div>
-                        <div className='px-0.5 relative'>
-                            <input onFocus={() => setSearchInputActive(true)} onBlur={() => setTimeout(() => setSearchInputActive(false), 200)} value={searchInput} onChange={handleSearchInput} type="text" placeholder='Search user' className='outline-none bg-gray-100 my-1 px-3 w-full h-[40px] rounded-[5px]'/>
-                            <button className={`absolute right-0 top-1 hover:bg-gray-200 h-[40px] w-[40px] items-center justify-center cursor-pointer ${searchInputActive? 'flex': 'hidden'}`} onClick={clearSearchInput}><X className='h-[30px] w-[30px]'/></button>
-                        </div>
-                    </div>
                     {isLoading?(
                         <div className='w-full h-[80vh] flex items-center justify-center'>
                             <SpinnerCircular color='black' secondaryColor='#E5E7EB'/>
                         </div>
                     ):(
-                        <>
+                        <div>
                         <table className="w-full table-auto border-collapse border border-gray-300 dark:border-gray-700">
                             <thead>
                                 <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white">
@@ -144,8 +121,7 @@ export default function Request({ users }: { users: PaginateInterface }) {
                                 ))}
                             </tbody>
                         </table>
-                        {showPagination && <Paginate data={users} />}
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

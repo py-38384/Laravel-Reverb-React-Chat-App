@@ -20,9 +20,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Request({ users }: { users: PaginateInterface }) {
+export default function Request({ users }: { users: User[] }) {
     const bearerToken = localStorage.getItem('bearerToken');
-    const [usersData, setUserData] = useState(users.data)
+    const [usersData, setUserData] = useState(users)
     const getInitials = useInitials();
     const currentUser = useCurrentUser();
     const [backupUserData, setBackupUserData] = useState(users); 
@@ -54,20 +54,6 @@ export default function Request({ users }: { users: PaginateInterface }) {
     useEffect(() => {
         isSuccess? setUserData(data): null
     },[data, isSuccess])
-    const clearSearchInput = () => {
-        setSearchInput('')
-        setUserData(backupUserData.data)
-        setShowPagination(true)
-    }
-    const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchInput(e.target.value)
-        if(!e.target.value){
-            setShowPagination(true)
-            setUserData(backupUserData.data)
-        } else {
-            setShowPagination(false)
-        }
-    }
     const handleStartConversation = async(id: string) => {
         startConversation.post(route('chat.start',id), {
             onSuccess: (page) => {
@@ -75,24 +61,99 @@ export default function Request({ users }: { users: PaginateInterface }) {
             }
         })
     }
+
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const tbodyRef = useRef<HTMLTableSectionElement | null>(null)
+    const [userOffset,setUserOffset] = useState(2)
+    const [moreUserAvailable, setMoreUserAvailable] = useState(true);
+    const oldScrollHeightRef = useRef(0)
+    let lastCall = 0
+    const loadMoreUsers = () => {
+        setUserOffset((prev) => {
+            getSetUsers(prev)
+            const newUserOffset = prev+1
+            return newUserOffset
+        });
+    };
+    const getSetUsers = async (offset: number) => {
+        try {
+            const bearerToken = localStorage.getItem('bearerToken');
+            const res = await fetch(route('user.global'), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${bearerToken}`,
+                },
+                body: JSON.stringify({
+                    offsetAmount: offset,
+                }),
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const resData = await res.json();
+
+            if (resData.status === 'success') {
+                if(resData.data.length > 0){
+                    setUserData(prev => [...prev, ...resData.data])
+                } else {
+                    setMoreUserAvailable(false)
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch older messages:', err);
+            return false
+        } finally {
+
+        }
+    };
+    useEffect(() => {
+        let debouncer: ReturnType<typeof setTimeout>
+        const handleLoad = (e: Event) => {
+            const target = e.target as HTMLTableElement
+            if((target.scrollHeight - (target.scrollTop + target.clientHeight)) < 50){
+                const now = Date.now()
+                if(now - lastCall > 100){
+                    const container = containerRef.current
+                    if (container) {
+                        oldScrollHeightRef.current = container.scrollHeight
+                    }
+                    lastCall = now
+
+                    setMoreUserAvailable(prev => {
+                        if(prev){
+                            loadMoreUsers()
+                        }
+                        return prev
+                    })
+
+                    if (debouncer) clearTimeout(debouncer)
+                    debouncer = setTimeout(() => {
+                        lastCall = 0; 
+                    }, 1000)
+                }
+            }
+        }
+        const container = containerRef.current
+        container?.addEventListener('scroll',handleLoad)
+
+        return () => {
+            container?.removeEventListener('scroll', handleLoad)
+        }
+    },[])
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
             {usersData.length > 0?(
             <div className="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
                 <div className="overflow-x-auto">
-                    <div>
-                        <div className='px-0.5 relative'>
-                            <input onFocus={() => setSearchInputActive(true)} onBlur={() => setTimeout(() => setSearchInputActive(false), 200)} value={searchInput} onChange={handleSearchInput} type="text" placeholder='Search user' className='outline-none bg-gray-100 my-1 px-3 w-full h-[40px] rounded-[5px]'/>
-                            <button className={`absolute right-0 top-1 hover:bg-gray-200 h-[40px] w-[40px] items-center justify-center cursor-pointer ${searchInputActive? 'flex': 'hidden'}`} onClick={clearSearchInput}><X className='h-[30px] w-[30px]'/></button>
-                        </div>
-                    </div>
                     {isLoading?(
                         <div className='w-full h-[80vh] flex items-center justify-center'>
                             <SpinnerCircular color='black' secondaryColor='#E5E7EB'/>
                         </div>
                     ):(
-                        <>
+                        <div className='overflow-y-scroll max-h-[80vh]' ref={containerRef}>
                         <table className="w-full table-auto border-collapse border border-gray-300 dark:border-gray-700">
                             <thead>
                                 <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white">
@@ -102,7 +163,7 @@ export default function Request({ users }: { users: PaginateInterface }) {
                                     <th className="w-12 border border-gray-300 px-4 py-2 text-left dark:border-gray-700">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody ref={tbodyRef}>
                                 {usersData?.map((user: User) => (
                                     <tr key={user.id}>
                                         <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">
@@ -134,8 +195,7 @@ export default function Request({ users }: { users: PaginateInterface }) {
                                 ))}
                             </tbody>
                         </table>
-                        {showPagination && <Paginate data={users} />}
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

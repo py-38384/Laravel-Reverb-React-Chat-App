@@ -1,5 +1,3 @@
-import Paginate from '@/components/paginate';
-import useCurrentUser from '@/hooks/use-current-user';
 import useDebounce from '@/hooks/use-debounce';
 import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
@@ -8,8 +6,8 @@ import { User } from '@/types/model';
 import { Paginate as PaginateInterface } from '@/types/paginate';
 import { Head, useForm } from '@inertiajs/react';
 import { useQuery } from '@tanstack/react-query';
-import { Ban, Undo2, UserMinus, UserPlus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Ban, UserPlus, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { SpinnerCircular } from 'spinners-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -19,12 +17,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Messages({ users }: { users: PaginateInterface }) {
+export default function Messages({ users }: { users: User[] }) {
     const bearerToken = localStorage.getItem('bearerToken');
-    const [usersData, setUserData] = useState(users.data);
+    const [usersData, setUserData] = useState(users);
     const getInitials = useInitials();
-    const currentUser = useCurrentUser();
-    console.log(users.data)
     const [backupUserData, setBackupUserData] = useState(users);
     const [searchInputActive, setSearchInputActive] = useState(false);
     const [showPagination, setShowPagination] = useState(true);
@@ -56,14 +52,14 @@ export default function Messages({ users }: { users: PaginateInterface }) {
     }, [data, isSuccess]);
     const clearSearchInput = () => {
         setSearchInput('');
-        setUserData(backupUserData.data);
+        setUserData(backupUserData);
         setShowPagination(true);
     };
     const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(e.target.value);
         if (!e.target.value) {
             setShowPagination(true);
-            setUserData(backupUserData.data);
+            setUserData(backupUserData);
         } else {
             setShowPagination(false);
         }
@@ -85,23 +81,6 @@ export default function Messages({ users }: { users: PaginateInterface }) {
             setUserData(preUserData => preUserData.filter(user => user.id !== id));
         }
     };
-    const handleCancelFriendRequest = async (id: string) => {
-        const res = await fetch('/api/remove/request', {
-            method: 'POST',
-            headers: {
-                accept: 'application/json',
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${bearerToken}`,
-            },
-            body: JSON.stringify({
-                id: id,
-            }),
-        });
-        const data = await res.json();
-        if (data?.status == 'success') {
-            setUserData((preUserData) => preUserData.map((user) => (user.id === id ? { ...user, is_pending: false } : user)));
-        }
-    };
     const handleBlockRequest = async (id: string) => {
         if(!confirm('Are You Sure You Want To Block This User?')) return 
         const res = await fetch('/api/block/request', {
@@ -120,6 +99,87 @@ export default function Messages({ users }: { users: PaginateInterface }) {
             setUserData((preUserData) => preUserData.filter(user => user.id !== id));
         }
     }
+    
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const tbodyRef = useRef<HTMLTableSectionElement | null>(null)
+    const [userOffset,setUserOffset] = useState(2)
+    const [moreUserAvailable, setMoreUserAvailable] = useState(true);
+    const oldScrollHeightRef = useRef(0)
+    let lastCall = 0
+    const loadMoreUsers = () => {
+        setUserOffset((prev) => {
+            getSetUsers(prev)
+            const newUserOffset = prev+1
+            return newUserOffset
+        });
+    };
+    const getSetUsers = async (offset: number) => {
+        try {
+            const bearerToken = localStorage.getItem('bearerToken');
+            const res = await fetch(route('user.global'), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${bearerToken}`,
+                },
+                body: JSON.stringify({
+                    offsetAmount: offset,
+                }),
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const resData = await res.json();
+
+            if (resData.status === 'success') {
+                if(resData.data.length > 0){
+                    setUserData(prev => [...prev, ...resData.data])
+                } else {
+                    setMoreUserAvailable(false)
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch older messages:', err);
+            return false
+        } finally {
+
+        }
+    };
+    useEffect(() => {
+        let debouncer: ReturnType<typeof setTimeout>
+        const handleLoad = (e: Event) => {
+            const target = e.target as HTMLTableElement
+            if((target.scrollHeight - (target.scrollTop + target.clientHeight)) < 50){
+                const now = Date.now()
+                if(now - lastCall > 100){
+                    const container = containerRef.current
+                    if (container) {
+                        oldScrollHeightRef.current = container.scrollHeight
+                    }
+                    lastCall = now
+
+                    setMoreUserAvailable(prev => {
+                        if(prev){
+                            loadMoreUsers()
+                        }
+                        return prev
+                    })
+
+                    if (debouncer) clearTimeout(debouncer)
+                    debouncer = setTimeout(() => {
+                        lastCall = 0; 
+                    }, 1000)
+                }
+            }
+        }
+        const container = containerRef.current
+        container?.addEventListener('scroll',handleLoad)
+
+        return () => {
+            container?.removeEventListener('scroll', handleLoad)
+        }
+    },[])
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List of Users" />
@@ -150,7 +210,7 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                                 <SpinnerCircular color="black" secondaryColor="#E5E7EB" />
                             </div>
                         ) : (
-                            <>
+                            <div className='overflow-y-scroll max-h-[80vh]' ref={containerRef}>
                                 <table className="w-full table-auto border-collapse border border-gray-300 dark:border-gray-700">
                                     <thead>
                                         <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white">
@@ -160,7 +220,7 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                                             <th className="w-12 border border-gray-300 px-4 py-2 text-left dark:border-gray-700">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody ref={tbodyRef}>
                                         {usersData.map((user: User) => (
                                             <tr key={user.id}>
                                                 <td className="border border-gray-300 px-4 py-2 dark:border-gray-700">
@@ -194,8 +254,7 @@ export default function Messages({ users }: { users: PaginateInterface }) {
                                         ))}
                                     </tbody>
                                 </table>
-                                {showPagination && <Paginate data={users} />}
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>

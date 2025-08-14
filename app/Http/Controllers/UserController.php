@@ -25,21 +25,21 @@ class UserController extends Controller
         return Inertia::render("global",["users" => $users]);
     }
     public function requests(){
-        $requests = auth()->user()->receivedFriendships()->where('friendships.status','pending')->select(['users.id','users.name','users.image','users.email','friendships.status','friendships.created_at'])->paginate(10);
+        $requests = auth()->user()->receivedFriendships()->where('friendships.status','pending')->select(['users.id','users.name','users.image','users.email','friendships.status','friendships.created_at'])->get();
         return Inertia::render("requests",["users" => $requests]);
     }
     public function friends(){
         $friendIds = auth()->user()->allFriendIds();
-        $friends = User::whereIn('id',$friendIds)->select(['id','name','image','email'])->paginate(10);
+        $friends = User::whereIn('id',$friendIds)->select(['id','name','image','email'])->orderBy('created_at')->limit(config('constant.pagination'))->get();
         return Inertia::render("friends",["users" => $friends]);
     }
     public function blocks(){
         $enemyIds = auth()->user()->allEnemyIds();
-        $enemies = User::whereIn('id',$enemyIds)->select(['id','name','image','email'])->paginate(10);
+        $enemies = User::whereIn('id',$enemyIds)->select(['id','name','image','email'])->get();
         return Inertia::render('blocks',["users" => $enemies]);
     }
     public function requests_outgoing(){
-        $requests = auth()->user()->sentFriendships()->where('friendships.status','pending')->select(['users.id','users.name','users.image','users.email','friendships.status','friendships.created_at'])->paginate(10);
+        $requests = auth()->user()->sentFriendships()->where('friendships.status','pending')->select(['users.id','users.name','users.image','users.email','friendships.status','friendships.created_at'])->get();
         return Inertia::render("requests_outgoing",["users" => $requests]);
     }
 

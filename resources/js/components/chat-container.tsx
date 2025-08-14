@@ -69,9 +69,6 @@ const ChatContainer = (
                 : -1,
         );
     }, [allSendingMessageGroup]);
-
-    const scrollRef = useRef<HTMLDivElement | null>(null);
-    let scrollTimeout = useRef(null);
     let lastCall = 0
     const [messageLoadIndex, setMessageLoadIndex] = useState(1)
     useEffect(() => {
