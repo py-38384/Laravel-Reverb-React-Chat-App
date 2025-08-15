@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Conversation;
 use App\Traits\HasUlidPrimaryKey;
+use Carbon\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -39,6 +40,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = ['last_seen_human'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -49,7 +52,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_seen_at' => 'datetime'
         ];
+    }
+    public function getLastSeenHumanAttribute(){
+        if(!$this->last_seen_at){
+            return null;
+        }
+        return Carbon::parse($this->last_seen_at)->diffForHumans();
     }
     public function conversations()
     {

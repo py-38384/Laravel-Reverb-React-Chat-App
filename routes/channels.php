@@ -15,7 +15,10 @@ Broadcast::channel('conversation.{conversation_id}', function($user, $conversati
         return false;
     }
     if($conversation->users->contains('id', $user->id)){
-        // return ["id" => $user->id, "name" => $user->name];
+        $user->forceFill([
+            'last_seen_at' => now()
+        ])->saveQuietly();
+        $user->saveQuietly();
         return $user->id;
     }
     return false;

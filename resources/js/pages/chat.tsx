@@ -9,7 +9,7 @@ import { MessageForm } from '@/types/form';
 import { TypingState, TypingUser } from '@/types/global';
 import { Conversations, Message } from '@/types/model';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useEcho, useEchoPresence } from '@laravel/echo-react';
+import { useEcho, useEchoPresence, echo } from '@laravel/echo-react';
 import { ArrowLeft, ImageIcon, SendHorizonal, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -259,7 +259,7 @@ export default function Chat({
 
     const [chatContainerRender, setChatContainerRender] = useState(1);
 
-    const { channel } = useEchoPresence(`conversation.${conversation.id}`,'update')
+    const { channel, leaveChannel } = useEchoPresence(`conversation.${conversation.id}`,'update')
     
     const sendTypingwhisper = (e: React.FormEvent<HTMLInputElement>) => {
         const text = (e.target as HTMLInputElement).value
@@ -285,38 +285,38 @@ export default function Chat({
             setTyping(null)
         }, 1500)
     }
-    const pingSec = 3
-    const pingRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const handlePing = () => {
-        setOffline('')
-        pingRef.current && clearTimeout(pingRef.current)
-        pingRef.current = setTimeout(() => {
-            setOffline('Offline for some moment')
-        }, pingSec*1000)
-    }
     useEffect(() => {
         const ch = channel()
-        const pingInterval = setInterval(() => {
-            ch.whisper('ping',{name: currentUser.name, id: currentUser.id, image: currentUser.image})
-        },pingSec)
         ch.listenForWhisper('typing', handletypingWhisper);
-        ch.listenForWhisper('ping', handlePing);
         ch.joining((user: any) => {
-            console.log('from the joining')
-            console.log(user)
-            console.log()
+            setOffline('')
         })
         .leaving((user: any) => {
-            console.log('from the leaving')
-            console.log(user)
-            console.log()
+            setTimeout(() =>{
+                setOffline("Last Active Few Minute Ago")
+            }, (1000 * 60))
         })
         .here((users: any) => {
-            // start from here
+            if(users.length > 1){
+                setOffline('')
+            } else {
+                setOffline(`Last Active ${otherUser.last_seen_human}`)
+            }
         })
+        
+        setOffline(prev => {
+            const otherUserLastSeen = new Date(otherUser.last_seen_at)
+            const diffMs = Date.now() - otherUserLastSeen.getTime()
+            const diffInMinute = diffMs / (1000 * 60)
+            if(diffInMinute > 1){
+                return `Last Active ${otherUser.last_seen_human}`
+            } else {
+                return ''
+            }
+        })
+
         return () => { 
             ch.stopListeningForWhisper('typing', handletypingWhisper)
-            clearInterval(pingInterval)
         }
     }, [])
     return (
