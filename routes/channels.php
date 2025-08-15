@@ -14,5 +14,9 @@ Broadcast::channel('conversation.{conversation_id}', function($user, $conversati
     if (!$conversation) {
         return false;
     }
-    return $conversation->users->contains('id', $user->id);
+    if($conversation->users->contains('id', $user->id)){
+        // return ["id" => $user->id, "name" => $user->name];
+        return $user->id;
+    }
+    return false;
 });

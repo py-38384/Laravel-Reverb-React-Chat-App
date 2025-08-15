@@ -1,29 +1,29 @@
-import { getOtherUserFromPrivateChat } from '@/helper';
+import { getOtherUserFromPrivateChat, isScrollable } from '@/helper';
 import { useInitials } from '@/hooks/use-initials';
+import { TypingState } from '@/types/global';
 import { Conversations, Message, User } from '@/types/model';
 import React, { useEffect, useRef, useState } from 'react';
 import { SpinnerCircular } from 'spinners-react';
 import MessageLeft from './message-left';
 import MessageRight from './message-right';
 
-const ChatContainer = (
-        { 
-            conversation, 
-            currentUser, 
-            messages, 
-            setMessages,
-            fetchOlderMessages,
-            setScrollToBottom,
-        }: 
-        { 
-            conversation: Conversations; 
-            currentUser: User; 
-            messages: Message[][], 
-            setMessages: React.Dispatch<React.SetStateAction<Message[][]>> 
-            fetchOlderMessages: () => void,
-            setScrollToBottom: React.Dispatch<React.SetStateAction<boolean>>
-        }
-    ) => {
+const ChatContainer = ({
+    conversation,
+    currentUser,
+    messages,
+    typing,
+    setMessages,
+    fetchOlderMessages,
+    setScrollToBottom,
+}: {
+    conversation: Conversations;
+    currentUser: User;
+    messages: Message[][];
+    typing: TypingState;
+    setMessages: React.Dispatch<React.SetStateAction<Message[][]>>;
+    fetchOlderMessages: () => void;
+    setScrollToBottom: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
     const bottomRef = useRef<HTMLDivElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(true);
@@ -36,17 +36,16 @@ const ChatContainer = (
     useEffect(() => {
         const timeout = setTimeout(() => {
             setLoading(false);
-            setScrollToBottom(prev => {
-                if(prev){
+            setScrollToBottom((prev) => {
+                if (prev) {
                     bottomRef.current?.scrollIntoView();
                 } else {
-                    
                 }
-                return true
-            })
+                return true;
+            });
         }, 500);
         const container = containerRef.current;
-        if(container){
+        if (container) {
             const newScrollHeight = container.scrollHeight;
             const diff = newScrollHeight - oldScrollHeightRef.current;
             if (diff > 0) {
@@ -58,6 +57,7 @@ const ChatContainer = (
     }, [messages]);
     const getInitials = useInitials();
     const isPrivate = conversation.type === 'private';
+    const typingTextRef = useRef<HTMLDivElement | null>(null) 
     const otherUser = isPrivate ? getOtherUserFromPrivateChat(conversation) : null;
     useEffect(() => {
         setLastMessageSeenId(() =>
@@ -68,35 +68,39 @@ const ChatContainer = (
                       .sort((a, b) => b.id - a.id)[0]?.id
                 : -1,
         );
-    }, [allSendingMessageGroup]);
-    let lastCall = 0
-    const [messageLoadIndex, setMessageLoadIndex] = useState(1)
+        let text_length = typing? typing.text_length: 0
+        let dotHTML = ''
+        for (let index = 0; index < text_length; index++) {
+            dotHTML+='. '
+        }
+        const typingTextElement = typingTextRef?.current
+        typingTextElement && (typingTextElement.innerHTML = dotHTML)
+        bottomRef.current?.scrollIntoView();
+    }, [typing]);
+    let lastCall = 0;
     useEffect(() => {
         const el = containerRef.current;
         let debouncer: ReturnType<typeof setTimeout>;
         const handleMessageContainerScroll = (e: Event) => {
             const target = e.target as HTMLDivElement;
-
+            
             if (target.scrollTop < 100) {
                 const now = Date.now();
-
+                
                 if (now - lastCall > 100) {
-                    // Call immediately
                     const container = containerRef.current;
                     if (container) {
                         oldScrollHeightRef.current = container.scrollHeight;
                     }
-                    setMessageLoading(true)
-                    fetchOlderMessages()
-                    setMessageLoading(false)
-                    
+                    setMessageLoading(true);
+                    fetchOlderMessages();
+                    setMessageLoading(false);
 
                     lastCall = now;
 
-                    // Start cooldown
                     if (debouncer) clearTimeout(debouncer);
                     debouncer = setTimeout(() => {
-                        lastCall = 0; // reset so next scroll can trigger instantly
+                        lastCall = 0;
                     }, 1000);
                 }
             }
@@ -108,12 +112,18 @@ const ChatContainer = (
             el?.removeEventListener('scroll', handleMessageContainerScroll);
         };
     }, []);
+    useEffect(() => {
+        const container = containerRef.current;
+        if(!isScrollable(container)){
+            fetchOlderMessages();
+        }
+    },[messages])
     return (
         <div className="relative">
             {messageLoading && (
-            <div className="absolute top-0 z-10 flex h-[100px] w-full items-center justify-center bg-transparent">
-                <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />
-            </div>
+                <div className="absolute top-0 z-10 flex h-[100px] w-full items-center justify-center bg-transparent">
+                    <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />
+                </div>
             )}
             {loading && (
                 <div className="absolute z-10 flex h-full w-full items-center justify-center bg-white">
@@ -174,6 +184,26 @@ const ChatContainer = (
                         </div>
                     </div>
                 ))}
+                {typing && (
+                <div className="chat chat-left">
+                    <div className="dp-container">
+                        {typing.user.image ? (
+                            <img src={`/${typing.user.image}`} alt="" />
+                        ) : (
+                            <div className="flex h-[45px] w-[45px] items-center justify-center rounded-full bg-gray-200">
+                                {getInitials(typing.user.name)}
+                            </div>
+                        )}
+                    </div>
+                    <div className="message-container">
+                        <div className="message-group">
+                            <div className="message message-left flex flex-col justify-center bg-gray-200 dark:bg-gray-900" ref={typingTextRef}>typing</div>
+                            <div className="absolute bottom-0 left-0 w-full text-center text-[10px]"></div>
+                        </div>
+                    </div>
+                </div>
+                )}
+
                 <div id="bottom-anchor" ref={bottomRef}></div>
             </div>
         </div>

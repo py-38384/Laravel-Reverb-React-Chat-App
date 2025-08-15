@@ -99,3 +99,6 @@ export function getLaravelTimestamp() {
     const microseconds = now.getMilliseconds().toString().padStart(3, '0') + '000'; // pad to 6 digits
     return `${date}.${microseconds}Z`;
 }
+export function isScrollable(el: any) {
+    return el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth;
+}

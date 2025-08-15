@@ -6,11 +6,12 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { MessageObject } from '@/types/event';
 import { MessageForm } from '@/types/form';
+import { TypingState, TypingUser } from '@/types/global';
 import { Conversations, Message } from '@/types/model';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useEcho } from '@laravel/echo-react';
+import { useEcho, useEchoPresence } from '@laravel/echo-react';
 import { ArrowLeft, ImageIcon, SendHorizonal, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,33 +20,40 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+
 export default function Chat({
     conversation,
     messages,
-    unReadMessages,
 }: {
     conversation: Conversations;
     messages: Message[][];
-    unReadMessages: Message[];
 }) {
     const otherUser = getOtherUserFromPrivateChat(conversation);
     const DefaultPageTitle = `Chat With ${otherUser.name}`;
-
-    const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
-        message: '',
-        files: [],
-        conversation_id: conversation.id,
-    });
     const currentUser = useCurrentUser();
     const getInitials = useInitials();
     const [currentMessages, setCurrentMessages] = useState<Message[][]>(messages);
     const [pageTitle, setPageTitle] = useState(DefaultPageTitle);
     const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
     const [unSeenMessageCount, setUnSeenMessageCount] = useState(0);
+    const [hasMoreMessages, setHasMoreMessages] = useState(true)
+    const messageBoxRef = useRef<HTMLInputElement | null>(null);
+    const [typing, setTyping] = useState<TypingState>(null);
     const [messageOffset, setMessageOffset] = useState(1);
+    const [offline, setOffline] = useState('')
+
+    const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
+        message: '',
+        files: [],
+        conversation_id: conversation.id,
+    });
+    
     const fetchOlderMessages = () => {
         setMessageOffset((prev) => {
-            getSetMessage(prev)
+            setHasMoreMessages(prevHasMoreMessages => {
+                if(prevHasMoreMessages) getSetMessage(prev)
+                return prevHasMoreMessages
+            })
             const newMessageOffset = prev+1
             return newMessageOffset
         });
@@ -74,6 +82,9 @@ export default function Chat({
                 setScrollToBottom(false)
                 setCurrentMessages(prev => [...resData.data, ...prev])
                 
+            }
+            if(resData?.data?.length <= 0){
+                setHasMoreMessages(false)
             }
         } catch (err) {
             console.error('Failed to fetch older messages:', err);
@@ -193,6 +204,7 @@ export default function Chat({
 
     const handleMessageReceive = (e: MessageObject) => {
         const messageObj: Message = typeof e.message === 'string' ? JSON.parse(e.message) : e.message;
+        setTyping(null)
 
         setCurrentMessages((prevCurrentMessages: Message[][]) => {
             if (
@@ -242,10 +254,71 @@ export default function Chat({
             ),
         );
     };
-    useEcho(`conversation.${conversation.id}`, `SendMessage`, handleMessageReceive);
-    useEcho(`conversation.${conversation.id}`, `MessageSeen`, handleMessageSeen);
+    useEchoPresence(`conversation.${conversation.id}`, `SendMessage`, handleMessageReceive);
+    useEchoPresence(`conversation.${conversation.id}`, `MessageSeen`, handleMessageSeen);
 
     const [chatContainerRender, setChatContainerRender] = useState(1);
+
+    const { channel } = useEchoPresence(`conversation.${conversation.id}`,'update')
+    
+    const sendTypingwhisper = (e: React.FormEvent<HTMLInputElement>) => {
+        const text = (e.target as HTMLInputElement).value
+        channel().whisper('typing',{text_length:text.length, user: {name: currentUser.name, id: currentUser.id, image: currentUser.image}})
+    }
+    const whisperTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [typingDotAmount, setTypingDotAmount] = useState(0)
+    const handletypingWhisper = (e: {text_length: number, user: TypingUser}) => {
+        const user = e.user
+        const typingMessage = {
+            conversation_id: conversation.id,
+            message: "typing",
+            sender_id: user.id,
+            type: 'whisper',
+            user: user,
+            text_length: e.text_length,
+        }
+        setTyping(typingMessage)
+        if(whisperTimeout.current) {
+            clearTimeout(whisperTimeout.current)
+        }
+        whisperTimeout.current = setTimeout(() => {
+            setTyping(null)
+        }, 1500)
+    }
+    const pingSec = 3
+    const pingRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const handlePing = () => {
+        setOffline('')
+        pingRef.current && clearTimeout(pingRef.current)
+        pingRef.current = setTimeout(() => {
+            setOffline('Offline for some moment')
+        }, pingSec*1000)
+    }
+    useEffect(() => {
+        const ch = channel()
+        const pingInterval = setInterval(() => {
+            ch.whisper('ping',{name: currentUser.name, id: currentUser.id, image: currentUser.image})
+        },pingSec)
+        ch.listenForWhisper('typing', handletypingWhisper);
+        ch.listenForWhisper('ping', handlePing);
+        ch.joining((user: any) => {
+            console.log('from the joining')
+            console.log(user)
+            console.log()
+        })
+        .leaving((user: any) => {
+            console.log('from the leaving')
+            console.log(user)
+            console.log()
+        })
+        .here((users: any) => {
+            // start from here
+        })
+        return () => { 
+            ch.stopListeningForWhisper('typing', handletypingWhisper)
+            clearInterval(pingInterval)
+        }
+    }, [])
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={pageTitle} />
@@ -273,10 +346,10 @@ export default function Chat({
                                     <span
                                         className="idicator-icon"
                                         style={{
-                                            backgroundColor: 'lime',
+                                            backgroundColor: offline? 'gray': 'lime',
                                         }}
                                     ></span>
-                                    Online
+                                    {offline? offline: 'Online'} 
                                 </div>
                             </div>
                         </div>
@@ -294,6 +367,7 @@ export default function Chat({
                     setMessages={setCurrentMessages}
                     fetchOlderMessages={fetchOlderMessages}
                     setScrollToBottom={setScrollToBottom}
+                    typing={typing}
                 />
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">
@@ -330,6 +404,7 @@ export default function Chat({
                             className="message-input-box scrollbar-hide border-1 border-transparent bg-gray-100 focus:border-gray-100 focus:bg-transparent dark:bg-gray-900"
                             onChange={(e) => setData('message', e.target.value)}
                             value={data.message}
+                            onInput={sendTypingwhisper}
                         ></input>
                     </div>
                     <div className="send-button-container rounded-full hover:bg-gray-100 dark:hover:bg-gray-900">
