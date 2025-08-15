@@ -7,6 +7,7 @@
 /storage/*.key
 /storage/pail
 /storage/message
+storage/message/image
 /vendor
 .env
 .env.backup
@@ -23,11 +24,5 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-storage/message/image/Fs3vSvHJPl9zttOn0l0OlAIgAeaRfvkyTumzzXIF.png
-storage/message/image/GwT3EjnDupYrtdXJisqymPNVbAjvjC6VWuvFu39B.jpg
-storage/message/image/IV13BppJnhSgyvUzFByZqpZQ54XJp33gYskxNC6Q.jpg
-storage/message/image/os34Ux5qxkdLsLuNSW3qUJX4IcZDOQEHO1NFCsT6.jpg
-storage/message/image/rrHKFBro5TPuWrnpkFs1R0ZlBsvDPstiYqQfnPcY.jpg
-storage/message/image/x7ympia4EswBY1NNKoZTEQhHyHvfYEcS05AkePkT.jpg
-storage/message/image/ZaBob0nzQEUtK41lpbHWPyeGpVZRQuK9D3ETnEFy.jpg
 database/schema/mysql-schema.sql
+public/asset/profile/image/Frzs15Vk24U8o5QHAaKJAlzexmu5ujk8ngRcxEcU.jpg
