@@ -35,7 +35,7 @@ class MessageSeen implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("conversation.{$this->conversation->id}"),
+            new PresenceChannel("conversation.{$this->conversation->id}"),
         ];
     }
 }

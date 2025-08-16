@@ -12,11 +12,21 @@ class MessageObserver
      */
     public function created(Message $message): void
     {
-        DB::table('message_counter')
-            ->updateOrInsert(
-                ['conversation_id' => $message->conversation_id],
-                ['message_count' => DB::raw('COALESCE(message_count, 0) + 1')]
-            );
+        $conversationId = $message->conversation->id;
+        $counter = DB::table('message_counter')
+        ->where('conversation_id', $conversationId)
+        ->first();
+
+        if ($counter) {
+            DB::table('message_counter')
+                ->where('conversation_id', $conversationId)
+                ->increment('message_count');
+        } else {
+            DB::table('message_counter')->insert([
+                'conversation_id' => $conversationId,
+                'message_count' => 1,
+            ]);
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\PrimaryApiController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ImageController;
 use Inertia\Inertia;
@@ -24,6 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('friends', [UserController::class, 'friends'])->name('friends');
     Route::get('message/image/{image_id}',ImageController::class);
 });
+// Route::get('test', [PrimaryApiController::class, 'user_unfriend']);
 
 
 require __DIR__.'/settings.php';

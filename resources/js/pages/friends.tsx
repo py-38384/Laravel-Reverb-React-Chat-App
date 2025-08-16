@@ -108,6 +108,30 @@ export default function Request({ users }: { users: User[] }) {
 
         }
     };
+    const handleUnfriendRequest = async (id: string) => {
+        if(!confirm('Are You Sure You Want To Unfriend This Person?')) return
+        
+        const bearerToken = localStorage.getItem('bearerToken');
+            const res = await fetch(route('user.unfriend'), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${bearerToken}`,
+                },
+                body: JSON.stringify({
+                    id: id,
+                }),
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const resData = await res.json();
+
+            if (resData.status === 'success') {
+                setUserData(prev => prev.filter(user => user.id !== id))
+            }
+    }
     useEffect(() => {
         let debouncer: ReturnType<typeof setTimeout>
         const handleLoad = (e: Event) => {
@@ -186,7 +210,7 @@ export default function Request({ users }: { users: User[] }) {
                                                     <button title='Send Message' onClick={() => handleStartConversation(user.id)}>
                                                         <MessageSquare className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
                                                     </button>
-                                                    <button title='Unfriend'>
+                                                    <button title='Unfriend' onClick={() => handleUnfriendRequest(user.id)}>
                                                         <UserMinus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
                                                     </button>
                                             </div>

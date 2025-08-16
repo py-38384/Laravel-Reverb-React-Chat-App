@@ -1,6 +1,7 @@
 import { getOtherUserFromPrivateChat } from "@/helper";
 import { useInitials } from "@/hooks/use-initials";
 import { Conversations, Image, Message } from "@/types/model";
+import { useEffect } from "react";
 
 const MessageLeft = ({
     

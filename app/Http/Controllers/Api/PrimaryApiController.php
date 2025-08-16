@@ -7,6 +7,7 @@ use App\Models\Message;
 use App\Models\Friendship;
 use App\Events\MessageSeen;
 use App\Models\Conversation;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use App\Services\ChatServices;
 use Illuminate\Support\Facades\DB;
@@ -257,5 +258,58 @@ class PrimaryApiController extends Controller
             ->get()
             ->toArray();
         return ['status' => 'success','data' => $data];
+    }
+    public function user_unfriend(Request $request){
+        $request->validate([
+            'id' => ['required','exists:users,id']
+        ]);
+
+        $user1 = auth()->id();
+        $user2 = $request->id;
+
+        $private_conversation = Conversation::with('messages.images')->where('type','private')
+        ->whereHas('users', function ($query) use ($request, $user1){
+            $query->where('user_id',$user1);
+        })
+        ->whereHas('users', function ($query) use ($user2) {
+            $query->where('user_id',$user2);
+        })
+        ->first();
+
+        if($private_conversation){
+            $messages = $private_conversation->messages? $private_conversation->messages: [];
+            $messagesIdsArray = [];
+            foreach($messages as $message){
+                if($message instanceof Message){
+                    foreach($message->images as $image){
+                        try {
+                            unlink(storage_path($image->full_path));
+                        } catch (\Throwable $th) {
+                            logger()->error('When Trying To Delete Images Related To Message Related To Conversation Related To Users Who No Longer Want To Be Friend In PrimaryApiController.php File In user_unfriend Function Gor An Error -> '.$th->getMessage());
+                        }
+                    }
+                    $messagesIdsArray[] = $message->id;
+                }
+            }
+            DB::table('message_counter')->where('conversation_id', $private_conversation->id)->delete();
+            $private_conversation->delete();
+            if (!empty($messagesIdsArray)) {
+                Message::whereIn('id', $messagesIdsArray)->delete();
+            }
+        }
+
+        $friendShip = Friendship::whereIn('requester_id',[$user1, $user2])->whereIn('addressee_id',[$user1, $user2])->first();
+        if(!$friendShip){
+            return [
+                "status" => "unsuccessful",
+                "message" => "Friendship Not Found Between You Too",
+            ];
+        }
+        $friendShip->delete();
+        return [
+            "status" => "success",
+            "message" => "Unfriend Successfull And Conversation Message Message Files All Removed",
+        ];
+
     }
 }

@@ -128,7 +128,7 @@ export default function Chat({
                 }),
             });
             if (res.status === 200) {
-                const resData = await res.json();
+                const resData = await res.json()
                 if (resData.status === 'success') {
                     // nothing to do here
                 }
@@ -205,6 +205,7 @@ export default function Chat({
     const handleMessageReceive = (e: MessageObject) => {
         const messageObj: Message = typeof e.message === 'string' ? JSON.parse(e.message) : e.message;
         setTyping(null)
+        setOffline('')
 
         setCurrentMessages((prevCurrentMessages: Message[][]) => {
             if (

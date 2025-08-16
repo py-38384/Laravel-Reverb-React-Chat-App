@@ -33,6 +33,10 @@ const ChatContainer = ({
         messages.filter((messageGroup) => messageGroup[0].sender_id == currentUser.id),
     );
     const [lastMessageSeenId, setLastMessageSeenId] = useState(-1);
+    const getInitials = useInitials();
+    const isPrivate = conversation.type === 'private';
+    const typingTextRef = useRef<HTMLDivElement | null>(null) 
+    const otherUser = isPrivate ? getOtherUserFromPrivateChat(conversation) : null;
     useEffect(() => {
         const timeout = setTimeout(() => {
             setLoading(false);
@@ -53,21 +57,23 @@ const ChatContainer = ({
             }
         }
         setAllSendingMessageGroup(messages.filter((messageGroup) => messageGroup[0].sender_id == currentUser.id));
-        return () => clearTimeout(timeout);
-    }, [messages]);
-    const getInitials = useInitials();
-    const isPrivate = conversation.type === 'private';
-    const typingTextRef = useRef<HTMLDivElement | null>(null) 
-    const otherUser = isPrivate ? getOtherUserFromPrivateChat(conversation) : null;
-    useEffect(() => {
-        setLastMessageSeenId(() =>
-            otherUser
+
+        setLastMessageSeenId((prevLastMessageId) => {
+            console.log(prevLastMessageId);
+            return otherUser
                 ? messages
                       .flat()
                       .filter((message) => message.message_seen.some((user) => user.id === otherUser.id))
                       .sort((a, b) => b.id - a.id)[0]?.id
-                : -1,
-        );
+                : -1
+        });
+        if(!isScrollable(container)){
+            fetchOlderMessages();
+        }
+
+        return () => clearTimeout(timeout);
+    }, [messages]);
+    useEffect(() => {
         let text_length = typing? typing.text_length: 0
         let dotHTML = ''
         for (let index = 0; index < text_length; index++) {
@@ -76,7 +82,7 @@ const ChatContainer = ({
         const typingTextElement = typingTextRef?.current
         typingTextElement && (typingTextElement.innerHTML = dotHTML)
         bottomRef.current?.scrollIntoView();
-    }, [typing]);
+    }, [typing])
     let lastCall = 0;
     useEffect(() => {
         const el = containerRef.current;
@@ -112,12 +118,6 @@ const ChatContainer = ({
             el?.removeEventListener('scroll', handleMessageContainerScroll);
         };
     }, []);
-    useEffect(() => {
-        const container = containerRef.current;
-        if(!isScrollable(container)){
-            fetchOlderMessages();
-        }
-    },[messages])
     return (
         <div className="relative">
             {messageLoading && (
