@@ -102,7 +102,7 @@ export default function Request({ users }: { users: User[] }) {
                                                     alt=""
                                                 ></img>
                                             ) : (
-                                                <div className="flex h-[45px] w-[45px] items-center justify-center rounded-full bg-gray-200">
+                                                <div className="flex h-[45px] w-[45px] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
                                                     {getInitials(user.name)}
                                                 </div>
                                             )}
@@ -112,10 +112,10 @@ export default function Request({ users }: { users: User[] }) {
                                         <td className="relative border border-gray-300 px-4 py-2 dark:border-gray-700">
                                             <div className="flex">
                                                     <button title='Accept Request' onClick={() => handleFriendRequest(user.id, 'accept')}>
-                                                        <Check className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                        <Check className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800" />
                                                     </button>
                                                     <button title='Reject Request' onClick={() => handleFriendRequest(user.id, 'reject')}>
-                                                        <X className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                        <X className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800" />
                                                     </button>
                                             </div>
                                         </td>

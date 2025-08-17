@@ -102,7 +102,7 @@ export default function Request({ users }: { users: User[] }) {
                                                     alt=""
                                                 ></img>
                                             ) : (
-                                                <div className="flex h-[45px] w-[45px] items-center justify-center rounded-full bg-gray-200">
+                                                <div className="flex h-[45px] w-[45px] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
                                                     {getInitials(user.name)}
                                                 </div>
                                             )}
@@ -113,7 +113,7 @@ export default function Request({ users }: { users: User[] }) {
                                             <div className="flex">
             
                                                     <button title='Reject Request' onClick={() => handleCancelFriendRequest(user.id)}>
-                                                        <X className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                        <X className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800" />
                                                     </button>
                                             </div>
                                         </td>

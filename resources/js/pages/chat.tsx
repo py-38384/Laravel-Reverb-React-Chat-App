@@ -41,6 +41,7 @@ export default function Chat({
     const [typing, setTyping] = useState<TypingState>(null);
     const [messageOffset, setMessageOffset] = useState(1);
     const [offline, setOffline] = useState('')
+    const [showDetails, setShowDetails] = useState(false)
 
     const { data, setData, reset, post, processing, errors } = useForm<MessageForm>({
         message: '',
@@ -64,7 +65,7 @@ export default function Chat({
             const res = await fetch(route('fetch.messages'), {
                 method: 'POST',
                 headers: {
-                    Accept: 'application/json',
+                    // Accept: 'application/json',
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${bearerToken}`,
                 },
@@ -356,8 +357,8 @@ export default function Chat({
                         </div>
                     </div>
                     <div className="info-container">
-                        <span className="info hover:bg-gray-100 dark:hover:bg-gray-900">
-                            <span className="info-icon border-2 border-[#171717] text-[#171717] dark:border-gray-100 dark:text-gray-100">i</span>
+                        <span className="info hover:bg-gray-100 dark:hover:bg-gray-900" onClick={() => setShowDetails(prev => !prev)}>
+                            <span className="info-icon select-none border-2 border-[#171717] text-[#171717] dark:border-gray-100 dark:text-gray-100">i</span>
                         </span>
                     </div>
                 </div>
@@ -369,6 +370,8 @@ export default function Chat({
                     fetchOlderMessages={fetchOlderMessages}
                     setScrollToBottom={setScrollToBottom}
                     typing={typing}
+                    showDetails={showDetails}
+                    setShowDetails={setShowDetails}
                 />
                 {data.files && data.files.length > 0 ? (
                     <div className="no-scrollbar absolute bottom-0 mb-18 flex w-fit gap-2 overflow-x-scroll bg-gray-100 p-2 dark:bg-black">

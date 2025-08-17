@@ -6,6 +6,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SpinnerCircular } from 'spinners-react';
 import MessageLeft from './message-left';
 import MessageRight from './message-right';
+import { ArrowBigLeft, ArrowLeft, X } from 'lucide-react';
+import { router } from '@inertiajs/react';
 
 const ChatContainer = ({
     conversation,
@@ -15,6 +17,8 @@ const ChatContainer = ({
     setMessages,
     fetchOlderMessages,
     setScrollToBottom,
+    showDetails,
+    setShowDetails,
 }: {
     conversation: Conversations;
     currentUser: User;
@@ -23,20 +27,47 @@ const ChatContainer = ({
     setMessages: React.Dispatch<React.SetStateAction<Message[][]>>;
     fetchOlderMessages: () => void;
     setScrollToBottom: React.Dispatch<React.SetStateAction<boolean>>;
+    showDetails: boolean;
+    setShowDetails: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
-    const bottomRef = useRef<HTMLDivElement | null>(null);
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [messageLoading, setMessageLoading] = useState(false);
-    const oldScrollHeightRef = useRef(0);
+    const bottomRef = useRef<HTMLDivElement | null>(null)
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [messageLoading, setMessageLoading] = useState(false)
+    const oldScrollHeightRef = useRef(0)
     const [allSendingMessageGroup, setAllSendingMessageGroup] = useState(
         messages.filter((messageGroup) => messageGroup[0].sender_id == currentUser.id),
     );
     const [lastMessageSeenId, setLastMessageSeenId] = useState(-1);
-    const getInitials = useInitials();
+    const getInitials = useInitials()
     const isPrivate = conversation.type === 'private';
     const typingTextRef = useRef<HTMLDivElement | null>(null) 
     const otherUser = isPrivate ? getOtherUserFromPrivateChat(conversation) : null;
+
+
+    const handleConversationDelete = async () => {
+        if(!confirm('Are You Sure? You Want To Delete This Conversation?')) return
+        const bearerToken = localStorage.getItem('bearerToken');
+        const res = await fetch(route('conversation.delete'), {
+            method: 'POST',
+            headers: {
+                accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${bearerToken}`,
+            },
+            body: JSON.stringify({
+                id: conversation.id,
+            }),
+        });
+        if (res.status === 200) {
+            const resData = await res.json()
+            if (resData.status === 'success') {
+                router.visit(route('friends'))
+            }
+        }
+    }
+
+
     useEffect(() => {
         const timeout = setTimeout(() => {
             setLoading(false);
@@ -118,20 +149,21 @@ const ChatContainer = ({
             el?.removeEventListener('scroll', handleMessageContainerScroll);
         };
     }, []);
+    console.log(window.innerWidth)
     return (
-        <div className="relative">
+        <div className="relative flex min-h-[75vh]">
             {messageLoading && (
                 <div className="absolute top-0 z-10 flex h-[100px] w-full items-center justify-center bg-transparent">
                     <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />
                 </div>
             )}
             {loading && (
-                <div className="absolute z-10 flex h-full w-full items-center justify-center bg-white">
+                <div className="absolute z-10 flex h-full w-full items-center justify-center bg-white dark:bg-black">
                     <SpinnerCircular color="black z-10" secondaryColor="#E5E7EB" />
                 </div>
             )}
-            <div className="chat-container p-4" ref={containerRef}>
-                {messages.map((messageGroup, groupIndex) => (
+            <div className="chat-container p-4 w-full" ref={containerRef}>
+                {messages.length > 0 ? messages.map((messageGroup, groupIndex) => (
                     <div key={groupIndex} className={`chat ${messageGroup[0].sender_id === currentUser.id ? 'chat-right' : 'chat-left'}`}>
                         <div
                             className="dp-container"
@@ -183,7 +215,9 @@ const ChatContainer = ({
                             ))}
                         </div>
                     </div>
-                ))}
+                )): (
+                    <h4 className='w-full text-center h-full mt-[150px] text-2xl font-semibold'>No Message Found</h4>
+                )}
                 {typing && (
                 <div className="chat chat-left">
                     <div className="dp-container">
@@ -206,6 +240,37 @@ const ChatContainer = ({
 
                 <div id="bottom-anchor" ref={bottomRef}></div>
             </div>
+            {showDetails && otherUser && (
+            <div className='lg:relative lg:w-[50%] absolute z-10 bg-gray-100  dark:bg-gray-900 min-h-[75vh] w-full border-l'>
+                <button className='p-1 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer mt-2 ml-2 rounded-full' onClick={() => setShowDetails(false)}>
+                    {window.innerWidth < 1024? (
+                        <X/>
+                    ): (
+                        <ArrowLeft/>
+                    )}
+                </button>
+                <div className='flex flex-col items-center justify-center mt-4'>
+                    <div className='w-[100px] h-[100px] mb-[10px]'>
+                        {otherUser.image? (
+                            <img className='rounded-full' src={`/${otherUser.image}`} alt=""></img>
+                        ) : (
+                            <div className="flex w-full h-full text-4xl items-center justify-center rounded-full bg-gray-200  dark:bg-gray-800">
+                                {getInitials(otherUser.name)}
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <h2 className='text-2xl font-semibold'>{otherUser.name}</h2>
+                    </div>
+                    <div>
+                        <p className='text-[15px]'>{otherUser.email}</p>
+                    </div>
+                    <div>
+                        <button className='mt-2 text-red-500 font-bold text-[15px] rounded cursor-pointer hover:underline' onClick={handleConversationDelete}>Delete Conversation</button>
+                    </div>
+                </div>
+            </div>
+            )}
         </div>
     );
 };

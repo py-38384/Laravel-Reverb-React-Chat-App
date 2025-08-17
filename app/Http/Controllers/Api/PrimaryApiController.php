@@ -277,25 +277,7 @@ class PrimaryApiController extends Controller
         ->first();
 
         if($private_conversation){
-            $messages = $private_conversation->messages? $private_conversation->messages: [];
-            $messagesIdsArray = [];
-            foreach($messages as $message){
-                if($message instanceof Message){
-                    foreach($message->images as $image){
-                        try {
-                            unlink(storage_path($image->full_path));
-                        } catch (\Throwable $th) {
-                            logger()->error('When Trying To Delete Images Related To Message Related To Conversation Related To Users Who No Longer Want To Be Friend In PrimaryApiController.php File In user_unfriend Function Gor An Error -> '.$th->getMessage());
-                        }
-                    }
-                    $messagesIdsArray[] = $message->id;
-                }
-            }
-            DB::table('message_counter')->where('conversation_id', $private_conversation->id)->delete();
-            $private_conversation->delete();
-            if (!empty($messagesIdsArray)) {
-                Message::whereIn('id', $messagesIdsArray)->delete();
-            }
+            $this->chatServices->delete_converstion_and_all_related_data($private_conversation);
         }
 
         $friendShip = Friendship::whereIn('requester_id',[$user1, $user2])->whereIn('addressee_id',[$user1, $user2])->first();
@@ -311,5 +293,28 @@ class PrimaryApiController extends Controller
             "message" => "Unfriend Successfull And Conversation Message Message Files All Removed",
         ];
 
+    }
+    public function conversation_delete(Request $request){
+        $request->validate([
+            'id' => ['required','exists:conversations,id']
+        ]);
+        $private_conversation = Conversation::find($request->id);
+        if(!$private_conversation->users()->where('user_id', auth()->id())->exists()){
+            return response([
+                "status" => "error",
+                "message" => "Unauthorize Oparation"
+            ],401);
+        }
+        $success = $this->chatServices->delete_conversation_and_all_related_data($private_conversation);
+        if($success){
+            return [
+                "status" => "success",
+                "message" => "Conversation Successfully Deleted"
+            ];
+        }
+        return [
+            "status" => "error",
+            "message" => "Something Went Wrong"
+        ];
     }
 }

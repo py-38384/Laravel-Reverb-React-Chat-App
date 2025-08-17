@@ -195,7 +195,7 @@ export default function Messages({ users }: { users: User[] }) {
                                     onChange={handleSearchInput}
                                     type="text"
                                     placeholder="Search user"
-                                    className="my-1 h-[40px] w-full rounded-[5px] bg-gray-100 px-3 outline-none"
+                                    className="my-1 h-[40px] w-full rounded-[5px] bg-gray-100 dark:bg-gray-800 px-3 outline-none"
                                 />
                                 <button
                                     className={`absolute top-1 right-0 h-[40px] w-[40px] cursor-pointer items-center justify-center hover:bg-gray-200 ${searchInputActive ? 'flex' : 'hidden'}`}
@@ -231,7 +231,7 @@ export default function Messages({ users }: { users: User[] }) {
                                                             alt=""
                                                         ></img>
                                                     ) : (
-                                                        <div className="flex h-[45px] w-[45px] items-center justify-center rounded-full bg-gray-200">
+                                                        <div className="flex h-[45px] w-[45px] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
                                                             {getInitials(user.name)}
                                                         </div>
                                                     )}
@@ -242,10 +242,10 @@ export default function Messages({ users }: { users: User[] }) {
                                                     <div className="flex">
 
                                                         <button title="Friend Request" onClick={() => handleFriendRequest(user.id)}>
-                                                            <UserPlus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                            <UserPlus className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer" />
                                                         </button>
                                                         <button title="Block">
-                                                            <Ban onClick={() => handleBlockRequest(user.id)} className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100" />
+                                                            <Ban onClick={() => handleBlockRequest(user.id)} className="h-[35px] w-[35px] rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"/>
                                                         </button>
 
                                                     </div>
@@ -270,7 +270,7 @@ export default function Messages({ users }: { users: User[] }) {
                                     onChange={handleSearchInput}
                                     type="text"
                                     placeholder="Search user"
-                                    className="my-1 h-[40px] w-full rounded-[5px] bg-gray-100 px-3 outline-none"
+                                    className="my-1 h-[40px] w-full rounded-[5px] bg-gray-100 dark:bg-gray-800 px-3 outline-none"
                                 />
                                 <button
                                     className={`absolute top-1 right-0 h-[40px] w-[40px] cursor-pointer items-center justify-center hover:bg-gray-200 ${searchInputActive ? 'flex' : 'hidden'}`}
